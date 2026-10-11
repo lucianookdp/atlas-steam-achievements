@@ -1,65 +1,25 @@
 # Atlas · Steam Achievements
 
-[Português](#português) · [English](#english)
+A local Windows app to browse installed Steam games, review achievement progress, and unlock selected achievements. It uses your open Steam session; Atlas has no separate login.
 
-## Português
-
-O Atlas é uma interface local para encontrar, organizar e revisar conquistas Steam. Não pede login nem senha; para consultar sua conta, usa a sessão Steam já aberta no computador. Abrir a interface não consulta a conta nem envia conquistas.
-
-### Instalar e abrir
-
-1. Baixe o [ZIP do projeto](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip) e extraia a pasta.
-2. No Windows, instale o [Node.js](https://nodejs.org/) 18 ou superior, se ainda não tiver.
-3. Com a Steam aberta, abra a pasta `steam-achievements` e dê **dois cliques em `Abrir Atlas.cmd` dentro dela**. Mantenha todos os arquivos juntos; se quiser abrir pela Área de Trabalho, crie um atalho para o `.cmd` em vez de copiar só ele. Se o navegador não abrir, acesse `http://127.0.0.1:47621`. Deixe a janela preta aberta enquanto usa o Atlas.
-
-Se quiser apenas explorar a interface sem opção de envio, use `Somente leitura.cmd`. Feche qualquer janela antiga do Atlas antes de trocar de modo.
-
-### Usar
-
-1. Escolha um jogo. Use **Atualizar** para procurar instalações novas. **Jogo de demonstração** permite testar a interface sem acessar sua conta.
-2. Busque e marque conquistas. A seleção fica salva neste navegador.
-3. Clique em **Verificar conta** quando quiser ver o progresso real. Isso habilita o filtro **Faltantes** e **Selecionar todos faltantes**. Para jogos reais, é preciso ter a Steam aberta e o jogo instalado.
-4. Revise sua seleção. O envio exige confirmação na interface. A fila aceita até **60 conquistas** por confirmação, faz uma operação por conquista, verifica o resultado e para se houver incerteza. Antes de confirmar, escolha **sem espera extra** (mais rápido), 5, 15 ou 30 segundos, 1, 2 ou 5 minutos, um tempo personalizado (1 a 3600 segundos) ou um intervalo aleatório entre limites definidos por você. O padrão é 1 minuto. Use **Parar** durante a fila, inclusive na contagem regressiva.
-
-No navegador, escolha o jogo, clique em **Verificar conta**, revise as faltantes e confirme somente a seleção que deseja enviar. O Atlas faz uma nova verificação antes de **cada conquista**. Feche a janela preta para encerrar o servidor.
-
-O Atlas não verifica quais outros jogos estão abertos. Feche jogos competitivos antes de testar; qualquer envio fica por sua conta e risco.
-
-**Logs locais:** tentativas de verificação e envio ficam em `logs/atlas-events.jsonl` (até 1 MB por arquivo, com duas cópias antigas). Cada linha contém horário, App ID, etapa, duração e resultado; a conquista é identificada por hash. O arquivo não registra Steam ID, senha, nomes ou respostas brutas e não é servido pela interface. Confira esse arquivo antes de compartilhá-lo.
-
-**Risco:** desbloquear conquistas pode contrariar regras da Steam ou do jogo e resultar em punições, inclusive na conta. Não recomendamos uso em jogos competitivos online. Não há um intervalo comprovadamente seguro contra banimentos; a opção rápida apenas elimina a espera extra, mantendo a verificação entre operações. Não há garantia de sucesso ou compatibilidade. Leia [riscos e relatos](RISCOS-E-RELATOS.md).
-
-O projeto usa o [SAM como referência técnica](SAM-REFERENCIA.md), sem alegar proteção contra banimentos.
-
-Execute `npm test` para rodar testes locais com dados simulados, sem consultar sua conta nem enviar conquistas. O Atlas não altera a data histórica das conquistas.
+[English](#english) · [Português](#português)
 
 ## English
 
-Atlas is a local interface for finding, organizing, and reviewing Steam achievements. Atlas does not ask for a login or password; account checks use the Steam session already open on your computer. Opening the interface does not check your account or send achievements.
+1. Download and extract the [repository ZIP](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip). Keep all files together. Install [Node.js 18+](https://nodejs.org/) if needed, and open Steam.
+2. Double-click **`Abrir Atlas.cmd`** inside the extracted folder. Keep the console open. If needed, open [localhost:47621](http://127.0.0.1:47621). To browse without sending, use **`Somente leitura.cmd`**. Create a shortcut if you want to launch it from the Desktop; do not move the `.cmd` file alone.
+3. Choose a game, click **Verify account**, and select achievements. **Refresh** rescans installed games; **Add** accepts an App ID. Click **Unlock on Steam**, review the interval and selection, open **Learn more** for the risk notice, then confirm if you wish. Atlas handles one achievement at a time and stops on an uncertain result.
 
-### Install and open
+Close the console to stop Atlas. The default interval is one minute; other presets, custom times, and a random range are available. Atlas cannot set past unlock timestamps. Local logs are in `logs/atlas-events.jsonl` and should be reviewed before sharing. `npm test` runs simulated tests without accessing your Steam account.
 
-1. Download the [project ZIP](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip) and extract it.
-2. On Windows, install [Node.js](https://nodejs.org/) 18 or newer if needed.
-3. With Steam open, open the `steam-achievements` folder and **double-click `Abrir Atlas.cmd` inside it**. Keep all project files together; to launch from the Desktop, create a shortcut instead of copying the `.cmd` alone. If your browser does not open, visit `http://127.0.0.1:47621`. Keep the console window open while using Atlas.
+**Risk:** Steam or game rules may prohibit this use and penalties are possible. Avoid competitive online games. No interval or tool guarantees protection from bans.
 
-To explore without a send option, run `Somente leitura.cmd`. Close any older Atlas window before switching modes.
+## Português
 
-### Use
+1. Baixe e extraia o [ZIP do repositório](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip). Mantenha os arquivos juntos. Instale o [Node.js 18+](https://nodejs.org/) se necessário e abra a Steam.
+2. Dê dois cliques em **`Abrir Atlas.cmd`** dentro da pasta extraída. Deixe o terminal aberto. Se preciso, acesse [localhost:47621](http://127.0.0.1:47621). Para navegar sem enviar, use **`Somente leitura.cmd`**. Para abrir pela Área de Trabalho, crie um atalho; não mova o `.cmd` sozinho.
+3. Escolha um jogo, clique em **Verificar conta** e selecione conquistas. **Atualizar** procura jogos instalados; **Adicionar** aceita um App ID. Clique em **Desbloquear na Steam**, revise o intervalo e a seleção, abra **Ver mais** para ler o aviso de risco e confirme se desejar. O Atlas processa uma conquista por vez e para se o resultado for incerto.
 
-1. Choose a game. Use **Refresh** to find newly installed games. **Demo game** lets you try the interface without accessing your account.
-2. Search and mark achievements. Your selection is saved in this browser.
-3. Click **Verify account** when you want to see real progress. This enables the **Missing** filter and **Select all missing**. For real games, Steam must be open and the game installed.
-4. Review your selection. Sending requires confirmation in the interface. The queue accepts up to **60 achievements** per confirmation, runs one operation per achievement, verifies the result, and stops on uncertainty. Before confirming, choose **no extra wait** (fastest), 5, 15, or 30 seconds, 1, 2, or 5 minutes, a custom time (1 to 3600 seconds), or a random interval between limits you set. The default is 1 minute. Use **Stop** during the queue, including the countdown.
+Feche o terminal para encerrar. O intervalo padrão é um minuto; há tempos prontos, personalizado e aleatório. O Atlas não altera datas históricas. Os logs locais ficam em `logs/atlas-events.jsonl`; revise antes de compartilhar. `npm test` usa dados simulados e não acessa sua conta Steam.
 
-In the browser, choose a game, click **Verify account**, review missing achievements, and confirm only the selection you want to send. Atlas checks the account again before **each achievement**. Close the console window to stop the server.
-
-Atlas does not check which other games are running. Close competitive games before testing; any send is at your own risk.
-
-**Local logs:** probe and send attempts are saved in `logs/atlas-events.jsonl` (up to 1 MB per file, with two older copies). Each line contains time, App ID, stage, duration, and result; achievements use a hash. Steam ID, passwords, names, and raw connector responses are not logged. The interface does not serve this file. Review it before sharing.
-
-**Risk:** unlocking achievements may violate Steam or game rules and lead to penalties, including on your account. We do not recommend competitive online games. No interval is proven safe from bans; the fastest option only removes extra waiting while keeping verification between operations. Success and compatibility are not guaranteed. See [risks and reports](RISCOS-E-RELATOS.md) (Portuguese).
-
-The project uses [SAM as a technical reference](SAM-REFERENCIA.md), without claiming ban protection.
-
-Run `npm test` for local tests with simulated data; they do not check your account or send achievements. Atlas does not change historical unlock dates.
+**Risco:** regras da Steam ou do jogo podem proibir esse uso e resultar em punições. Evite jogos competitivos online. Nenhum intervalo ou ferramenta garante proteção contra banimentos.

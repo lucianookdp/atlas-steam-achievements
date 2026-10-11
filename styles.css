@@ -30,7 +30,8 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .mode-badge { white-space: nowrap; color: #bdd3df; background: #1b2a36; border: 1px solid #3b5465; padding: 7px 10px; border-radius: 100px; font-size: 10px; font-weight: 700; }
 .header-selection, .icon-btn, .language-btn { min-height: 31px; color: #d0dce5; background: #202b35; border: 1px solid #3c4c59; border-radius: 7px; font-size: 11px; font-weight: 700; }
 .header-selection { padding: 4px 9px; white-space: nowrap; }
-.language-btn { min-width: 36px; padding: 4px 7px; }
+.language-btn { min-width: 108px; padding: 6px 10px; color: #e4f4ff; background: #23435a; border-color: #6c9ebc; border-radius: 8px; box-shadow: inset 0 1px #ffffff22; }
+.language-btn:hover { background: #2d5b77; border-color: #9cc6df; }
 .header-selection b { display: inline-block; margin-left: 4px; padding: 2px 5px; border-radius: 5px; color: #082031; background: var(--blue-light); }
 .icon-btn { width: 31px; border-radius: 50%; }
 main { max-width: 1520px; margin: 0 auto; padding: 20px; }
@@ -38,15 +39,6 @@ main { max-width: 1520px; margin: 0 auto; padding: 20px; }
 .eyebrow, .step { color: var(--blue-light); font-size: 10px; font-weight: 800; letter-spacing: 1.2px; }
 .intro h1 { margin: 4px 0 0; font-size: clamp(20px, 2vw, 27px); line-height: 1.2; letter-spacing: -.5px; }
 .intro p { margin: 0 0 2px; max-width: 380px; text-align: right; color: var(--muted); font-size: 11px; line-height: 1.4; }
-.notice { border: 1px solid #605039; border-radius: 9px; background: #252319; margin-bottom: 15px; }
-.notice summary { display: flex; align-items: center; gap: 9px; min-height: 38px; padding: 7px 11px; list-style: none; cursor: pointer; }
-.notice summary::-webkit-details-marker { display: none; }
-.notice-icon { display: grid; place-items: center; width: 19px; height: 19px; flex: none; border-radius: 50%; background: #a96b2d; color: white; font-size: 11px; font-weight: 800; }
-.notice strong { color: #f7d9af; font-size: 11px; white-space: nowrap; }
-.notice-short { color: #c7b9a2; font-size: 11px; }
-.notice-expand { margin-left: auto; color: #e9c48f; font-size: 10px; white-space: nowrap; }
-.notice[open] .notice-expand span { display: inline-block; transform: rotate(180deg); }
-.notice p { border-top: 1px solid #574a35; padding: 10px 12px 12px 39px; margin: 0; color: #d1c6b6; line-height: 1.5; font-size: 11px; }
 .workspace { display: grid; grid-template-columns: minmax(210px, 245px) minmax(0, 1fr) minmax(230px, 260px); gap: 12px; align-items: start; }
 .panel { min-width: 0; border: 1px solid #344551; border-radius: 13px; background: linear-gradient(160deg, #1a242d, #151d25 65%); overflow: hidden; box-shadow: 0 12px 28px #02070c3d, inset 0 1px #ffffff08; }
 .library-panel, .achievements-panel { padding: 14px; }
@@ -77,14 +69,6 @@ input::placeholder { color: #7790a4; }
 .game-card strong { font-size: 11px; }
 .game-card small { margin-top: 2px; color: #8da5bb; font-size: 9px; }
 .game-card .arrow { margin-left: auto; color: #7aa9ca; }
-.quick-picks { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
-.quick-picks summary { list-style: none; color: var(--blue-light); font-size: 10px; font-weight: 700; cursor: pointer; }
-.quick-picks summary::-webkit-details-marker { display: none; }
-.quick-picks summary span { float: right; }
-.quick-picks[open] summary span { transform: rotate(180deg); }
-.quick-picks > div { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0 6px; }
-.quick-picks button { border: 1px solid #496171; border-radius: 5px; background: #253441; color: #cbdde8; padding: 5px 7px; font-size: 10px; }
-.quick-picks small { display: block; color: var(--muted); font-size: 9px; }
 .game-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; padding: 9px 10px; margin-bottom: 9px; background: #223442; border: 1px solid #486577; border-radius: 7px; }
 .game-banner strong, .game-banner small { display: block; }
 .game-banner strong { font-size: 12px; }
@@ -134,11 +118,6 @@ input::placeholder { color: #7790a4; }
 .review-item { display: flex; align-items: center; gap: 6px; padding: 8px 0; border-bottom: 1px solid #34424e; color: #d5e1e8; font-size: 10px; }
 .review-item::before { content: '✓'; color: var(--blue-light); font-weight: 800; }
 .review-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.risk-state { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0; padding: 9px; border: 1px solid #605039; border-radius: 7px; background: #252319; }
-.risk-light { width: 7px; height: 7px; flex: none; margin-top: 3px; border-radius: 50%; background: var(--amber); }
-.risk-state strong, .risk-state small { display: block; }
-.risk-state strong { color: #f1d2a4; font-size: 10px; }
-.risk-state small { color: #c4b69f; margin-top: 3px; font-size: 9px; line-height: 1.35; }
 .review-bottom { border-top: 1px solid var(--line); padding-top: 10px; }
 .primary-btn, .secondary-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 35px; padding: 8px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; transition: background .16s ease, box-shadow .16s ease, transform .16s ease; }
 .primary-btn { color: #f2f6f8; background: linear-gradient(135deg,#5796bd,#39789f); border: 1px solid #6ba8ce; box-shadow: inset 0 1px #ffffff2e; }
@@ -164,6 +143,12 @@ dialog input { width: 100%; border: 1px solid #4b6576; border-radius: 6px; backg
 .interval-settings small { display: block; margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.4; }
 .interval-fields { display: grid; grid-template-columns: 1fr 95px; align-items: center; gap: 6px 9px; margin-top: 9px; }
 .interval-fields label { margin: 0; }
+.confirm-risk { margin-top: 14px; padding: 11px 12px; border: 1px solid #6c563f; border-radius: 9px; background: #29251f; }
+.confirm-risk strong { color: #f5d7ae; font-size: 11px; }
+.confirm-risk p { margin-top: 4px; color: #d0beaa; font-size: 11px; }
+.confirm-risk details { margin-top: 8px; }
+.confirm-risk summary { width: fit-content; color: #f4d09f; font-size: 11px; font-weight: 700; cursor: pointer; }
+.confirm-risk details p { margin-top: 8px; line-height: 1.5; }
 .modal-close { float: right; border: 0; background: none; color: #aac0d2; font-size: 23px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 20px; }
 .modal-actions .primary-btn { width: auto; min-width: 100px; }
@@ -188,7 +173,6 @@ dialog .risk-confirm input { width: 16px; height: 16px; flex: none; margin: 1px 
   .review-panel { grid-column: auto; }
   .game-list { max-height: 132px; }
   .panel { width: 100%; }
-  .notice-short { display: none; }
   .control-row { flex-wrap: wrap; }
   .control-row input { flex-basis: 100%; }
 }
