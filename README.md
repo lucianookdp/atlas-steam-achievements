@@ -72,6 +72,8 @@ O SAM é distribuído sob [licença zlib](https://github.com/gibbed/SteamAchieve
 
 ## Arquivos
 
+Execute `npm test` para verificar parsing de schema, validação de envio, proteção HTTP, releitura e cache com dados simulados. A suíte força o modo somente leitura e não consulta a sessão Steam, não acessa a conta e não envia conquistas.
+
 - `server.js`: servidor local e descoberta de jogos.
 - `steam-schema.js`: leitura do cache binário de conquistas.
 - `steam-native.js`, `steam-native.ps1`: conector local Steamworks, isolado por processo.

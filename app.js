@@ -14,6 +14,7 @@ const DEMO_ACHIEVEMENTS = [
   { id: 'COLLECTOR', name: 'Colecionador', description: 'Reúna todos os itens especiais.' },
   { id: 'FINAL_CHAPTER', name: 'Último capítulo', description: 'Termine a história principal.' }
 ];
+const PROBE_TTL_MS = 5 * 60 * 1000;
 const state = { games: [DEMO], gameId: 'demo', catalogs: { demo: DEMO_ACHIEVEMENTS }, catalogSources: { demo: 'Demonstração' }, selected: {}, native: {}, probeReady: {}, writeEnabled: false, search: '', achievementSearch: '', filter: 'all', visibleLimit: 100 };
 
 function readSaved() {
@@ -48,13 +49,20 @@ async function loadLocalSchema(appid) {
 }
 function selectedIds() { return new Set(state.selected[state.gameId] || []); }
 function totalSelected() { return Object.values(state.selected).reduce((sum, ids) => sum + (Array.isArray(ids) ? ids.length : 0), 0); }
-function colors(id) { const n = [...String(id)].reduce((a, c) => a + c.charCodeAt(0), 0); return [['#45738e','#263f52'],['#537b8e','#2c4a5d'],['#3e6886','#263c50'],['#5b7784','#304754']][n % 4]; }
+function coverTone(id) { return [...String(id)].reduce((a, c) => a + c.charCodeAt(0), 0) % 4; }
+function probeIsFresh(appid) {
+  const time = state.probeReady[appid];
+  if (typeof time !== 'number') return false;
+  if (Date.now() - time < PROBE_TTL_MS) return true;
+  delete state.probeReady[appid];
+  return false;
+}
 
 function renderGames() {
   const q = state.search.toLocaleLowerCase('pt-BR');
   const visible = state.games.filter(g => g.name.toLocaleLowerCase('pt-BR').includes(q) || g.appid.includes(q));
   $('gameTotal').textContent = `${visible.length} ${visible.length === 1 ? 'jogo' : 'jogos'}`;
-  $('gameList').innerHTML = visible.length ? visible.map(g => { const [c1,c2] = colors(g.appid); return `<button class="game-card ${g.appid === state.gameId ? 'active' : ''}" data-id="${escapeHTML(g.appid)}"><span class="game-cover" style="--cover1:${c1};--cover2:${c2}">${escapeHTML(g.name.charAt(0).toUpperCase())}</span><span><strong>${escapeHTML(g.name)}</strong><small>${g.demo ? 'Exemplo interativo' : `App ID ${escapeHTML(g.appid)} · ${g.installed ? 'Instalado' : 'Adicionado'}`}</small></span><span class="arrow">›</span></button>`; }).join('') : '<div class="empty-state">Nenhum jogo encontrado.</div>';
+  $('gameList').innerHTML = visible.length ? visible.map(g => `<button class="game-card ${g.appid === state.gameId ? 'active' : ''}" data-id="${escapeHTML(g.appid)}"><span class="game-cover tone-${coverTone(g.appid)}">${escapeHTML(g.name.charAt(0).toUpperCase())}</span><span><strong>${escapeHTML(g.name)}</strong><small>${g.demo ? 'Exemplo interativo' : `App ID ${escapeHTML(g.appid)} · ${g.installed ? 'Instalado' : 'Adicionado'}`}</small></span><span class="arrow">›</span></button>`).join('') : '<div class="empty-state">Nenhum jogo encontrado.</div>';
   $('gameList').querySelectorAll('.game-card').forEach(button => button.addEventListener('click', () => { state.gameId = button.dataset.id; state.visibleLimit = 100; persist(); render(); loadLocalSchema(state.gameId); }));
 }
 function selectOrAddGame(appid, name) {
@@ -102,10 +110,11 @@ function renderAchievements() {
 function renderReview() {
   const ids = selectedIds(); const list = achievements().filter(a => ids.has(a.id));
   $('reviewCount').textContent = list.length; $('navCount').textContent = totalSelected();
-  $('exportButton').disabled = !list.length; $('unlockButton').disabled = !state.writeEnabled || list.length !== 1 || !state.probeReady[state.gameId];
+  const verified = probeIsFresh(state.gameId);
+  $('exportButton').disabled = !list.length; $('unlockButton').disabled = !state.writeEnabled || list.length !== 1 || !verified;
   $('riskTitle').textContent = 'Uso por sua conta e risco';
   $('riskDetail').textContent = 'Sem garantia contra punições no jogo ou na Steam';
-  $('nativeStatus').textContent = !state.writeEnabled ? 'Modo somente leitura. Nenhum desbloqueio pode ser enviado.' : list.length > 1 ? 'Envio experimental limitado a uma conquista por confirmação.' : state.probeReady[state.gameId] ? 'Conta verificada nesta sessão. O envio depende da Steam e do jogo.' : 'Verifique a conta antes de cada envio. O Atlas usa a sessão Steam já aberta.';
+  $('nativeStatus').textContent = !state.writeEnabled ? 'Modo somente leitura. Nenhum desbloqueio pode ser enviado.' : list.length > 1 ? 'Envio experimental limitado a uma conquista por confirmação.' : verified ? 'Conta verificada nesta sessão. O envio depende da Steam e do jogo.' : 'Verifique a conta antes de cada envio. O Atlas usa a sessão Steam já aberta.';
   $('reviewItems').innerHTML = list.length ? list.map(a => `<div class="review-item"><span>${escapeHTML(a.name)}</span></div>`).join('') : '<div class="review-empty">Suas conquistas selecionadas aparecerão aqui.</div>';
 }
 function render() { renderGames(); renderAchievements(); renderReview(); }
@@ -189,7 +198,8 @@ async function probeAccount() {
   try {
     const result = await nativeRequest('/api/native-probe', { appid });
     state.native[appid] = result.achievements;
-    state.probeReady[appid] = true;
+    state.probeReady[appid] = Date.now();
+    setTimeout(() => { if (state.gameId === appid) renderReview(); }, PROBE_TTL_MS);
     const known = new Set((state.catalogs[appid] || []).map(a => a.id));
     const discovered = Object.keys(result.achievements).filter(id => !known.has(id)).map(id => ({ id, name: id, description: '' }));
     if (discovered.length) {
@@ -203,7 +213,7 @@ async function probeAccount() {
 }
 function confirmUnlock() {
   const appid = state.gameId; const ids = achievements().filter(a => selectedIds().has(a.id)).map(a => a.id);
-  if (ids.length !== 1 || !state.probeReady[appid]) return;
+  if (ids.length !== 1 || !probeIsFresh(appid)) { renderReview(); return; }
   const pending = ids.filter(id => !state.native[appid][id]).length;
   showModal('Confirmar desbloqueio', `Você está prestes a enviar ${pending} conquista(s) de ${game()?.name} para a Steam. Isso pode contrariar regras da Steam ou do jogo e resultar em punições, inclusive na conta. O uso é por sua conta e risco. Não recomendamos uso em jogos competitivos online. Não há garantia de sucesso ou de ausência de banimento.`, '<label class="risk-confirm"><input type="checkbox" id="acceptRisk"> Li o aviso e assumo os riscos desta ação.</label>', 'Enviar à Steam', async modal => {
     if (!$('acceptRisk').checked) return error('Marque a confirmação para continuar.');
