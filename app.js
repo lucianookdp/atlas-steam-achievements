@@ -32,9 +32,46 @@ const COPY = {
     unlockTitle: 'Confirm unlock', unlockWarning: 'You are about to send {count} achievement(s) for {game} to Steam. The queue sends one at a time and stops if the result is uncertain. This may violate Steam or game rules and lead to penalties, including on your account. Freedom from bans is not guaranteed.', acceptRisk: 'I have read the warning and accept the risks of this action.', sendSteam: 'Send to Steam', riskRequired: 'Check the confirmation box to continue.', sending: 'Sending {current} of {total}; confirmed: {confirmed}.', stopQueue: 'Stop after the current operation', queueDone: '{confirmed} of {total} achievements confirmed. Check your Steam profile too.', queueStoppedTitle: 'Queue stopped', queueStopped: 'Queue stopped after {confirmed} of {total} confirmations. Check your Steam profile before trying again.', queueUncertain: 'Achievement {id} was not confirmed. Queue stopped after {confirmed} confirmation(s). Check your Steam profile.', confirmedTitle: 'Achievement confirmed', pendingTitle: 'Achievement still pending', unverifiedTitle: 'Result not confirmed', confirmedText: 'A new Steam read confirmed {id} as unlocked. Check your profile too.', pendingText: 'The send was accepted, but a new read still shows {id} as pending. Check your Steam profile before trying again.', unverifiedText: 'The send was requested, but verification failed: {error}. Check your Steam profile before trying again.', stateUnavailable: 'state unavailable', failedTitle: 'Failed or uncertain result', failedText: '{error} Check the state on Steam before trying again.', helpTitle: 'How to use', helpText: 'Choose a game and mark achievements to track. Your selection is saved in this browser. Progress and missing achievements require “Verify account”; the demo works without Steam. Atlas starts in read only mode. Sending is experimental, at your own risk, with no ban protection guarantee.', demoFirstName: 'First step', demoFirstDesc: 'Complete the opening chapter.', demoExplorerName: 'Explorer', demoExplorerDesc: 'Find all secret locations.', demoTeamName: 'Teamwork', demoTeamDesc: 'Complete a cooperative match.', demoCollectorName: 'Collector', demoCollectorDesc: 'Collect all special items.', demoFinalName: 'Final chapter', demoFinalDesc: 'Finish the main story.'
   }
 };
+Object.assign(COPY.pt, {
+  intervalLabel: 'Intervalo entre desbloqueios', interval15: '15 segundos', interval30: '30 segundos', interval60: '1 minuto', interval120: '2 minutos', interval300: '5 minutos', intervalCustom: 'Personalizado', intervalRandom: 'Aleatório (entre mínimo e máximo)', customSeconds: 'Segundos', minSeconds: 'Mínimo (segundos)', maxSeconds: 'Máximo (segundos)', intervalHint: 'Primeiro envio imediato. A pausa vale entre tentativas de desbloqueio; não garante proteção contra banimentos.', waitingNext: 'Próxima conquista em {time}. Confirmadas: {confirmed} de {total}.', invalidInterval: 'Escolha um intervalo válido de 1 a 3600 segundos; o máximo deve ser maior ou igual ao mínimo.', stopQueue: 'Parar fila'
+});
+Object.assign(COPY.en, {
+  intervalLabel: 'Time between unlocks', interval15: '15 seconds', interval30: '30 seconds', interval60: '1 minute', interval120: '2 minutes', interval300: '5 minutes', intervalCustom: 'Custom', intervalRandom: 'Random (between minimum and maximum)', customSeconds: 'Seconds', minSeconds: 'Minimum (seconds)', maxSeconds: 'Maximum (seconds)', intervalHint: 'The first send is immediate. The wait applies between unlock attempts; it does not protect against bans.', waitingNext: 'Next achievement in {time}. Confirmed: {confirmed} of {total}.', invalidInterval: 'Choose a valid interval from 1 to 3600 seconds; maximum must be at least minimum.', stopQueue: 'Stop queue'
+});
 const PROBE_TTL_MS = 5 * 60 * 1000;
 const MAX_QUEUE = 60;
-const state = { language: 'pt', games: [DEMO], gameId: 'demo', catalogs: { demo: DEMO_ACHIEVEMENTS }, catalogSources: { demo: 'Demonstração' }, selected: {}, native: { demo: { FIRST_STEP: true, EXPLORER: false, TEAM_WORK: false, COLLECTOR: false, FINAL_CHAPTER: false } }, probeReady: {}, accountFingerprint: {}, queueRunning: false, writeEnabled: false, search: '', achievementSearch: '', filter: 'all', visibleLimit: 100 };
+const PRESET_INTERVALS = [15, 30, 60, 120, 300];
+const DEFAULT_INTERVAL = { mode: '60', customSeconds: 60, minSeconds: 60, maxSeconds: 120 };
+function intervalSeconds(value) {
+  const seconds = Number(value);
+  if (!Number.isInteger(seconds) || seconds < 1 || seconds > 3600) throw new Error('Intervalo inválido: use de 1 a 3600 segundos.');
+  return seconds;
+}
+function savedIntervalSeconds(value, fallback) {
+  try { return intervalSeconds(value); } catch { return fallback; }
+}
+function parseIntervalConfig(input) {
+  const mode = String(input.mode);
+  const customSeconds = mode === 'custom' ? intervalSeconds(input.customSeconds) : savedIntervalSeconds(input.customSeconds, 60);
+  if (PRESET_INTERVALS.some(seconds => String(seconds) === mode)) return { mode, customSeconds, minSeconds: savedIntervalSeconds(input.minSeconds, 60), maxSeconds: savedIntervalSeconds(input.maxSeconds, 120) };
+  if (mode === 'custom') return { mode, customSeconds, minSeconds: savedIntervalSeconds(input.minSeconds, 60), maxSeconds: savedIntervalSeconds(input.maxSeconds, 120) };
+  if (mode === 'random') {
+    const minSeconds = intervalSeconds(input.minSeconds);
+    const maxSeconds = intervalSeconds(input.maxSeconds);
+    if (maxSeconds < minSeconds) throw new Error('O máximo deve ser maior ou igual ao mínimo.');
+    return { mode, customSeconds, minSeconds, maxSeconds };
+  }
+  throw new Error('Opção de intervalo inválida.');
+}
+function chooseIntervalMs(config, random = Math.random) {
+  if (config.mode === 'random') return (config.minSeconds + Math.floor(random() * (config.maxSeconds - config.minSeconds + 1))) * 1000;
+  return (config.mode === 'custom' ? config.customSeconds : Number(config.mode)) * 1000;
+}
+function formatCountdown(ms) {
+  const seconds = Math.ceil(Math.max(0, ms) / 1000);
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+const state = { language: 'pt', games: [DEMO], gameId: 'demo', catalogs: { demo: DEMO_ACHIEVEMENTS }, catalogSources: { demo: 'Demonstração' }, selected: {}, native: { demo: { FIRST_STEP: true, EXPLORER: false, TEAM_WORK: false, COLLECTOR: false, FINAL_CHAPTER: false } }, probeReady: {}, accountFingerprint: {}, queueRunning: false, writeEnabled: false, intervalPreference: { ...DEFAULT_INTERVAL }, search: '', achievementSearch: '', filter: 'all', visibleLimit: 100 };
 
 function tr(key, values = {}) {
   const template = COPY[state.language][key] ?? COPY.pt[key] ?? key;
@@ -61,12 +98,13 @@ function readSaved() {
     if (saved.catalogSources && typeof saved.catalogSources === 'object') state.catalogSources = { ...state.catalogSources, ...saved.catalogSources };
     if (saved.selected && typeof saved.selected === 'object') state.selected = saved.selected;
     if (saved.language === 'en' || saved.language === 'pt') state.language = saved.language;
+    if (saved.intervalPreference) { try { state.intervalPreference = parseIntervalConfig(saved.intervalPreference); } catch { /* Keep the default. */ } }
     if (Array.isArray(saved.customGames)) state.customGames = saved.customGames.filter(g => /^\d+$/.test(String(g.appid)) && typeof g.name === 'string');
     if (typeof saved.gameId === 'string') state.gameId = saved.gameId;
   } catch { /* A corrupted browser cache should not prevent launch. */ }
 }
 function persist() {
-  try { localStorage.setItem('atlas-state', JSON.stringify({ language: state.language, catalogs: state.catalogs, catalogSources: state.catalogSources, selected: state.selected, customGames: state.customGames || [], gameId: state.gameId })); }
+  try { localStorage.setItem('atlas-state', JSON.stringify({ language: state.language, catalogs: state.catalogs, catalogSources: state.catalogSources, selected: state.selected, customGames: state.customGames || [], gameId: state.gameId, intervalPreference: state.intervalPreference })); }
   catch { /* Private browsing can disable local storage. */ }
 }
 function escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -176,6 +214,7 @@ function showModal(title, text, fields, submitLabel, onSubmit) {
   $('modalSubmit').disabled = false;
   modal.querySelectorAll('[value="cancel"]').forEach(button => { button.disabled = false; });
   form.onsubmit = event => { if (event.submitter?.value === 'cancel') return; event.preventDefault(); onSubmit?.(modal); };
+  modal.oncancel = event => { if (state.queueRunning) event.preventDefault(); };
   modal.showModal();
 }
 function error(message) { let el = $('modalFields').querySelector('.modal-error'); if (!el) { el = document.createElement('div'); el.className = 'modal-error'; $('modalFields').append(el); } el.textContent = message; }
@@ -240,21 +279,47 @@ async function probeAccount() {
   } catch (err) { delete state.native[appid]; delete state.probeReady[appid]; delete state.accountFingerprint[appid]; if (state.gameId === appid) { render(); showModal(tr('probeFailed'), err.message, '', tr('close'), modal => modal.close()); } }
   finally { button.disabled = state.gameId === 'demo'; button.textContent = tr('verifyAccount'); }
 }
+function intervalFields() {
+  const preference = state.intervalPreference;
+  const options = [...PRESET_INTERVALS.map(seconds => `<option value="${seconds}" ${preference.mode === String(seconds) ? 'selected' : ''}>${tr(`interval${seconds}`)}</option>`), `<option value="custom" ${preference.mode === 'custom' ? 'selected' : ''}>${tr('intervalCustom')}</option>`, `<option value="random" ${preference.mode === 'random' ? 'selected' : ''}>${tr('intervalRandom')}</option>`].join('');
+  return `<div class="interval-settings"><label for="intervalMode">${tr('intervalLabel')}</label><select id="intervalMode">${options}</select><div id="customInterval" class="interval-fields ${preference.mode === 'custom' ? '' : 'hidden'}"><label for="customSeconds">${tr('customSeconds')}</label><input id="customSeconds" type="number" min="1" max="3600" step="1" value="${preference.customSeconds}"></div><div id="randomInterval" class="interval-fields ${preference.mode === 'random' ? '' : 'hidden'}"><label for="minSeconds">${tr('minSeconds')}</label><input id="minSeconds" type="number" min="1" max="3600" step="1" value="${preference.minSeconds}"><label for="maxSeconds">${tr('maxSeconds')}</label><input id="maxSeconds" type="number" min="1" max="3600" step="1" value="${preference.maxSeconds}"></div><small>${tr('intervalHint')}</small></div>`;
+}
 function confirmUnlock() {
   const appid = state.gameId;
   const ids = achievements().filter(a => selectedIds().has(a.id) && knownState(appid, a.id) === false).map(a => a.id);
   if (state.queueRunning || !probeIsFresh(appid) || !ids.length || ids.length > MAX_QUEUE || !state.accountFingerprint[appid]) { renderReview(); return; }
-  showModal(tr('unlockTitle'), tr('unlockWarning', { count: ids.length, game: game()?.name }), `<label class="risk-confirm"><input type="checkbox" id="acceptRisk"> ${tr('acceptRisk')}</label><button class="text-btn hidden" type="button" id="stopQueue">${tr('stopQueue')}</button>`, tr('sendSteam'), async modal => {
+  showModal(tr('unlockTitle'), tr('unlockWarning', { count: ids.length, game: game()?.name }), `${intervalFields()}<label class="risk-confirm"><input type="checkbox" id="acceptRisk"> ${tr('acceptRisk')}</label><button class="text-btn hidden" type="button" id="stopQueue">${tr('stopQueue')}</button>`, tr('sendSteam'), async modal => {
     if (!$('acceptRisk').checked) return error(tr('riskRequired'));
+    let intervalConfig;
+    try { intervalConfig = parseIntervalConfig({ mode: $('intervalMode').value, customSeconds: $('customSeconds').value, minSeconds: $('minSeconds').value, maxSeconds: $('maxSeconds').value }); }
+    catch { return error(tr('invalidInterval')); }
+    state.intervalPreference = intervalConfig;
+    persist();
     state.queueRunning = true;
     $('modalSubmit').disabled = true;
     modal.querySelectorAll('[value="cancel"]').forEach(button => { button.disabled = true; });
     const stopButton = $('stopQueue'); stopButton.classList.remove('hidden');
-    let stop = false; let confirmed = 0; let uncertainId = '';
-    stopButton.addEventListener('click', () => { stop = true; stopButton.disabled = true; });
+    let stop = false; let confirmed = 0; let uncertainId = ''; let cancelWait = null;
+    stopButton.addEventListener('click', () => { stop = true; stopButton.disabled = true; cancelWait?.(); });
+    const waitUntil = async deadline => new Promise(resolve => {
+      let timer;
+      const finish = () => { clearTimeout(timer); cancelWait = null; resolve(); };
+      const tick = () => {
+        if (stop) return finish();
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) return finish();
+        $('modalText').textContent = tr('waitingNext', { time: formatCountdown(remaining), confirmed, total: ids.length });
+        timer = setTimeout(tick, Math.min(1000, remaining));
+      };
+      cancelWait = finish;
+      tick();
+    });
     try {
       const fingerprint = state.accountFingerprint[appid];
+      let nextUnlockAt = 0;
       for (let i = 0; i < ids.length && !stop; i++) {
+        if (nextUnlockAt) await waitUntil(nextUnlockAt);
+        if (stop) break;
         $('modalText').textContent = tr('sending', { current: i + 1, total: ids.length, confirmed });
         const probe = await nativeRequest('/api/native-probe', { appid });
         if (stop) break;
@@ -262,11 +327,13 @@ function confirmUnlock() {
         state.native[appid] = probe.achievements;
         if (probe.achievements[ids[i]] === true) { state.selected[appid] = (state.selected[appid] || []).filter(id => id !== ids[i]); persist(); continue; }
         if (probe.achievements[ids[i]] !== false) throw new Error(state.language === 'en' ? 'Achievement not found in Steam.' : 'Conquista não encontrada na Steam.');
+        const unlockStartedAt = Date.now();
         const result = await nativeRequest('/api/native-unlock', { appid, ids: [ids[i]], confirmation: 'ASSUMO O RISCO' });
         delete state.probeReady[appid];
         if (result.verification?.achievements) state.native[appid] = result.verification.achievements;
         if (result.verification?.status !== 'confirmed') { uncertainId = ids[i]; break; }
         confirmed++;
+        nextUnlockAt = unlockStartedAt + chooseIntervalMs(intervalConfig);
         state.selected[appid] = (state.selected[appid] || []).filter(id => id !== ids[i]);
         persist();
         if (state.gameId === appid) render();
@@ -276,6 +343,10 @@ function confirmUnlock() {
       showModal(uncertainId ? tr('unverifiedTitle') : stop ? tr('queueStoppedTitle') : tr('confirmedTitle'), message, '', tr('understood'), dialog => dialog.close());
     } catch (err) { modal.close(); showModal(tr('failedTitle'), tr('failedText', { error: err.message }), '', tr('close'), dialog => dialog.close()); }
     finally { state.queueRunning = false; delete state.probeReady[appid]; if (state.gameId === appid) render(); }
+  });
+  $('intervalMode').addEventListener('change', event => {
+    $('customInterval').classList.toggle('hidden', event.target.value !== 'custom');
+    $('randomInterval').classList.toggle('hidden', event.target.value !== 'random');
   });
 }
 async function refreshGames(showStatus = true) {
@@ -325,6 +396,6 @@ async function start() {
   $('helpButton').addEventListener('click', () => showModal(tr('helpTitle'), tr('helpText'), '', tr('understood'), modal => modal.close()));
   $('navQueue').addEventListener('click', () => document.querySelector('.review-panel').scrollIntoView({ behavior: 'smooth', block: 'center' }));
 }
-if (typeof module !== 'undefined') module.exports = { COPY };
+if (typeof module !== 'undefined') module.exports = { COPY, parseIntervalConfig, chooseIntervalMs, formatCountdown };
 if (typeof document !== 'undefined') start();
 
