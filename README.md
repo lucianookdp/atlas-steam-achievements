@@ -10,7 +10,7 @@ O Atlas é uma interface local para encontrar, organizar e revisar conquistas St
 
 1. Baixe o [ZIP do projeto](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip) e extraia a pasta.
 2. No Windows, instale o [Node.js](https://nodejs.org/) 18 ou superior, se ainda não tiver.
-3. Com a Steam aberta, dê **dois cliques em `Abrir Atlas.cmd`**. Se o navegador não abrir, acesse `http://127.0.0.1:47621`. Deixe a janela preta aberta enquanto usa o Atlas.
+3. Com a Steam aberta, abra a pasta `steam-achievements` e dê **dois cliques em `Abrir Atlas.cmd` dentro dela**. Mantenha todos os arquivos juntos; se quiser abrir pela Área de Trabalho, crie um atalho para o `.cmd` em vez de copiar só ele. Se o navegador não abrir, acesse `http://127.0.0.1:47621`. Deixe a janela preta aberta enquanto usa o Atlas.
 
 Se quiser apenas explorar a interface sem opção de envio, use `Somente leitura.cmd`. Feche qualquer janela antiga do Atlas antes de trocar de modo.
 
@@ -41,7 +41,7 @@ Atlas is a local interface for finding, organizing, and reviewing Steam achievem
 
 1. Download the [project ZIP](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip) and extract it.
 2. On Windows, install [Node.js](https://nodejs.org/) 18 or newer if needed.
-3. With Steam open, **double-click `Abrir Atlas.cmd`**. If your browser does not open, visit `http://127.0.0.1:47621`. Keep the console window open while using Atlas.
+3. With Steam open, open the `steam-achievements` folder and **double-click `Abrir Atlas.cmd` inside it**. Keep all project files together; to launch from the Desktop, create a shortcut instead of copying the `.cmd` alone. If your browser does not open, visit `http://127.0.0.1:47621`. Keep the console window open while using Atlas.
 
 To explore without a send option, run `Somente leitura.cmd`. Close any older Atlas window before switching modes.
 
