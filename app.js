@@ -33,14 +33,14 @@ const COPY = {
   }
 };
 Object.assign(COPY.pt, {
-  intervalLabel: 'Intervalo entre desbloqueios', interval15: '15 segundos', interval30: '30 segundos', interval60: '1 minuto', interval120: '2 minutos', interval300: '5 minutos', intervalCustom: 'Personalizado', intervalRandom: 'Aleatório (entre mínimo e máximo)', customSeconds: 'Segundos', minSeconds: 'Mínimo (segundos)', maxSeconds: 'Máximo (segundos)', intervalHint: 'Primeiro envio imediato. A pausa vale entre tentativas de desbloqueio; não garante proteção contra banimentos.', waitingNext: 'Próxima conquista em {time}. Confirmadas: {confirmed} de {total}.', invalidInterval: 'Escolha um intervalo válido de 1 a 3600 segundos; o máximo deve ser maior ou igual ao mínimo.', stopQueue: 'Parar fila'
+  intervalLabel: 'Intervalo entre desbloqueios', interval0: 'Sem espera extra (mais rápido)', interval5: '5 segundos', interval15: '15 segundos', interval30: '30 segundos', interval60: '1 minuto', interval120: '2 minutos', interval300: '5 minutos', intervalCustom: 'Personalizado', intervalRandom: 'Aleatório (entre mínimo e máximo)', customSeconds: 'Segundos', minSeconds: 'Mínimo (segundos)', maxSeconds: 'Máximo (segundos)', intervalHint: 'Mesmo sem espera, o Atlas envia uma por vez e verifica o resultado. Nenhum intervalo garante proteção contra banimentos.', waitingNext: 'Próxima conquista em {time}. Confirmadas: {confirmed} de {total}.', invalidInterval: 'Escolha um intervalo válido de 1 a 3600 segundos; o máximo deve ser maior ou igual ao mínimo.', stopQueue: 'Parar fila'
 });
 Object.assign(COPY.en, {
-  intervalLabel: 'Time between unlocks', interval15: '15 seconds', interval30: '30 seconds', interval60: '1 minute', interval120: '2 minutes', interval300: '5 minutes', intervalCustom: 'Custom', intervalRandom: 'Random (between minimum and maximum)', customSeconds: 'Seconds', minSeconds: 'Minimum (seconds)', maxSeconds: 'Maximum (seconds)', intervalHint: 'The first send is immediate. The wait applies between unlock attempts; it does not protect against bans.', waitingNext: 'Next achievement in {time}. Confirmed: {confirmed} of {total}.', invalidInterval: 'Choose a valid interval from 1 to 3600 seconds; maximum must be at least minimum.', stopQueue: 'Stop queue'
+  intervalLabel: 'Time between unlocks', interval0: 'No extra wait (fastest)', interval5: '5 seconds', interval15: '15 seconds', interval30: '30 seconds', interval60: '1 minute', interval120: '2 minutes', interval300: '5 minutes', intervalCustom: 'Custom', intervalRandom: 'Random (between minimum and maximum)', customSeconds: 'Seconds', minSeconds: 'Minimum (seconds)', maxSeconds: 'Maximum (seconds)', intervalHint: 'Even without a wait, Atlas sends one at a time and verifies the result. No interval guarantees ban protection.', waitingNext: 'Next achievement in {time}. Confirmed: {confirmed} of {total}.', invalidInterval: 'Choose a valid interval from 1 to 3600 seconds; maximum must be at least minimum.', stopQueue: 'Stop queue'
 });
 const PROBE_TTL_MS = 5 * 60 * 1000;
 const MAX_QUEUE = 60;
-const PRESET_INTERVALS = [15, 30, 60, 120, 300];
+const PRESET_INTERVALS = [0, 5, 15, 30, 60, 120, 300];
 const DEFAULT_INTERVAL = { mode: '60', customSeconds: 60, minSeconds: 60, maxSeconds: 120 };
 function intervalSeconds(value) {
   const seconds = Number(value);
@@ -318,7 +318,7 @@ function confirmUnlock() {
       const fingerprint = state.accountFingerprint[appid];
       let nextUnlockAt = 0;
       for (let i = 0; i < ids.length && !stop; i++) {
-        if (nextUnlockAt) await waitUntil(nextUnlockAt);
+        if (nextUnlockAt > Date.now()) await waitUntil(nextUnlockAt);
         if (stop) break;
         $('modalText').textContent = tr('sending', { current: i + 1, total: ids.length, confirmed });
         const probe = await nativeRequest('/api/native-probe', { appid });
