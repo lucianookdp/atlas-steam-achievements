@@ -14,8 +14,9 @@ const DEMO_ACHIEVEMENTS = [
   { id: 'COLLECTOR', name: 'Colecionador', description: 'Reúna todos os itens especiais.' },
   { id: 'FINAL_CHAPTER', name: 'Último capítulo', description: 'Termine a história principal.' }
 ];
+const REASONS = { unavailable: 'Servidor fechado', bug: 'Bug no jogo', save: 'Save perdido', other: 'Outro motivo' };
 const PROBE_TTL_MS = 5 * 60 * 1000;
-const state = { games: [DEMO], gameId: 'demo', catalogs: { demo: DEMO_ACHIEVEMENTS }, catalogSources: { demo: 'Demonstração' }, selected: {}, native: {}, probeReady: {}, writeEnabled: false, search: '', achievementSearch: '', filter: 'all', visibleLimit: 100 };
+const state = { games: [DEMO], gameId: 'demo', catalogs: { demo: DEMO_ACHIEVEMENTS }, catalogSources: { demo: 'Demonstração' }, selected: {}, reasons: {}, native: { demo: { FIRST_STEP: true, EXPLORER: false, TEAM_WORK: false, COLLECTOR: false, FINAL_CHAPTER: false } }, probeReady: {}, writeEnabled: false, search: '', achievementSearch: '', filter: 'all', visibleLimit: 100 };
 
 function readSaved() {
   try {
@@ -23,12 +24,13 @@ function readSaved() {
     if (saved.catalogs && typeof saved.catalogs === 'object') state.catalogs = { ...state.catalogs, ...saved.catalogs };
     if (saved.catalogSources && typeof saved.catalogSources === 'object') state.catalogSources = { ...state.catalogSources, ...saved.catalogSources };
     if (saved.selected && typeof saved.selected === 'object') state.selected = saved.selected;
+    if (saved.reasons && typeof saved.reasons === 'object') state.reasons = saved.reasons;
     if (Array.isArray(saved.customGames)) state.customGames = saved.customGames.filter(g => /^\d+$/.test(String(g.appid)) && typeof g.name === 'string');
     if (typeof saved.gameId === 'string') state.gameId = saved.gameId;
   } catch { /* A corrupted browser cache should not prevent launch. */ }
 }
 function persist() {
-  try { localStorage.setItem('atlas-state', JSON.stringify({ catalogs: state.catalogs, catalogSources: state.catalogSources, selected: state.selected, customGames: state.customGames || [], gameId: state.gameId })); }
+  try { localStorage.setItem('atlas-state', JSON.stringify({ catalogs: state.catalogs, catalogSources: state.catalogSources, selected: state.selected, reasons: state.reasons, customGames: state.customGames || [], gameId: state.gameId })); }
   catch { /* Private browsing can disable local storage. */ }
 }
 function escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -48,6 +50,8 @@ async function loadLocalSchema(appid) {
   } catch { /* Import remains available when the cache is absent. */ }
 }
 function selectedIds() { return new Set(state.selected[state.gameId] || []); }
+function reasonFor(appid, id) { return REASONS[state.reasons[appid]?.[id]] || ''; }
+function knownState(appid, id) { const native = state.native[appid]; return native && Object.prototype.hasOwnProperty.call(native, id) ? native[id] : null; }
 function totalSelected() { return Object.values(state.selected).reduce((sum, ids) => sum + (Array.isArray(ids) ? ids.length : 0), 0); }
 function coverTone(id) { return [...String(id)].reduce((a, c) => a + c.charCodeAt(0), 0) % 4; }
 function probeIsFresh(appid) {
@@ -86,15 +90,18 @@ function renderSuggestions() {
 function filteredAchievements() {
   const q = state.achievementSearch.toLocaleLowerCase('pt-BR');
   const ids = selectedIds();
-  return achievements().filter(a => (String(a.name ?? '').toLocaleLowerCase('pt-BR').includes(q) || String(a.description ?? '').toLocaleLowerCase('pt-BR').includes(q) || String(a.id ?? '').toLocaleLowerCase('pt-BR').includes(q)) && (state.filter === 'all' || (state.filter === 'selected' ? ids.has(a.id) : !ids.has(a.id))));
+  return achievements().filter(a => (String(a.name ?? '').toLocaleLowerCase('pt-BR').includes(q) || String(a.description ?? '').toLocaleLowerCase('pt-BR').includes(q) || String(a.id ?? '').toLocaleLowerCase('pt-BR').includes(q)) && (state.filter === 'all' || (state.filter === 'selected' ? ids.has(a.id) : knownState(state.gameId, a.id) === false)));
 }
 function renderAchievements() {
   const g = game(); const list = achievements(); const ids = selectedIds();
   $('gameBanner').classList.toggle('hidden', !g);
-  if (g) $('gameBanner').innerHTML = `<strong>${escapeHTML(g.name)}</strong><span>${list.length} ${list.length === 1 ? 'conquista' : 'conquistas'} · ${escapeHTML(state.catalogSources[state.gameId] || 'Catálogo salvo')}</span>`;
+  const unlocked = list.filter(a => knownState(state.gameId, a.id) === true).length;
+  const pending = list.filter(a => knownState(state.gameId, a.id) === false).length;
+  const unknown = list.length - unlocked - pending;
+  if (g) $('gameBanner').innerHTML = `<div><strong>${escapeHTML(g.name)}</strong><small>${escapeHTML(state.catalogSources[state.gameId] || 'Catálogo salvo')}</small></div><div class="game-progress"><strong>${unknown === list.length && !g.demo ? 'Progresso não verificado' : `${unlocked} de ${list.length} desbloqueadas`}</strong><span>${unknown && unknown !== list.length ? `${unknown} sem leitura · ` : ''}${unknown === list.length && !g.demo ? 'Use Verificar conta para ver as faltantes' : `${pending} faltantes`}</span><progress max="${Math.max(list.length, 1)}" value="${unlocked}" aria-label="Progresso das conquistas"></progress></div>`;
   $('publicButton').disabled = state.gameId === 'demo';
   $('probeButton').disabled = state.gameId === 'demo';
-  $('countAll').textContent = list.length; $('countPending').textContent = list.length - ids.size; $('countSelected').textContent = ids.size;
+  $('countAll').textContent = list.length; $('countPending').textContent = unknown === list.length && !g?.demo ? '—' : pending; $('countSelected').textContent = list.filter(a => ids.has(a.id)).length;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.filter === state.filter));
   const matches = filteredAchievements();
   const visible = matches.slice(0, state.visibleLimit);
@@ -102,20 +109,22 @@ function renderAchievements() {
     $('achievementList').innerHTML = '<div class="empty-state"><div class="empty-icon">◇</div><strong>Catálogo indisponível</strong><p>Use “Consultar Steam” para buscar IDs públicos, abra o jogo para preencher o cache local ou importe um JSON.</p></div>';
     return;
   }
-  if (!visible.length) { $('achievementList').innerHTML = '<div class="empty-state"><div class="empty-icon">⌕</div><strong>Nenhuma conquista encontrada</strong><p>Tente outro termo ou filtro.</p></div>'; return; }
-  $('achievementList').innerHTML = visible.map(a => { const status = state.native[state.gameId]?.[a.id] ? 'unlocked' : ids.has(a.id) ? 'selected' : 'unselected'; return `<label class="achievement"><input type="checkbox" data-id="${escapeHTML(a.id)}" ${ids.has(a.id) ? 'checked' : ''}><span class="achievement-info"><strong>${escapeHTML(a.name)}</strong><span>${escapeHTML(a.description || 'Sem descrição')}${a.hidden ? ' · conquista oculta' : ''}</span></span><span class="achievement-status is-${status}">${status === 'unlocked' ? 'JÁ DESBLOQUEADA' : status === 'selected' ? 'SELECIONADA' : 'NÃO SELECIONADA'}</span></label>`; }).join('') + (matches.length > visible.length ? `<button class="load-more" id="loadMore" type="button">Mostrar mais · ${visible.length} de ${matches.length}</button>` : '');
-  $('achievementList').querySelectorAll('input').forEach(input => input.addEventListener('change', () => { const next = selectedIds(); input.checked ? next.add(input.dataset.id) : next.delete(input.dataset.id); state.selected[state.gameId] = [...next]; persist(); renderAchievements(); renderReview(); }));
+  if (!visible.length) { $('achievementList').innerHTML = state.filter === 'pending' && unknown === list.length && !g?.demo ? '<div class="empty-state"><strong>Faltantes ainda não verificadas</strong><p>Use “Verificar conta” quando quiser consultar o estado real na Steam. Sua seleção salva continua disponível em “Marcadas”.</p></div>' : '<div class="empty-state"><div class="empty-icon">⌕</div><strong>Nenhuma conquista encontrada</strong><p>Tente outro termo ou filtro.</p></div>'; return; }
+  $('achievementList').innerHTML = visible.map(a => { const status = knownState(state.gameId, a.id) === true ? 'unlocked' : ids.has(a.id) ? 'selected' : 'unselected'; const savedReason = state.reasons[state.gameId]?.[a.id] || ''; const reasonOptions = Object.entries(REASONS).map(([value, label]) => `<option value="${value}" ${savedReason === value ? 'selected' : ''}>${label}</option>`).join(''); return `<div class="achievement-row"><label class="achievement"><input type="checkbox" data-id="${escapeHTML(a.id)}" ${ids.has(a.id) ? 'checked' : ''}><span class="achievement-info"><strong>${escapeHTML(a.name)}</strong><span>${escapeHTML(a.description || 'Sem descrição')}${a.hidden ? ' · conquista oculta' : ''}</span></span><span class="achievement-status is-${status}">${status === 'unlocked' ? 'JÁ DESBLOQUEADA' : status === 'selected' ? 'MARCADA' : 'NÃO MARCADA'}</span></label>${ids.has(a.id) ? `<div class="reason-row"><span>Motivo</span><select class="reason-select" data-id="${escapeHTML(a.id)}" aria-label="Motivo para ${escapeHTML(a.name)}"><option value="">Escolha se quiser</option>${reasonOptions}</select></div>` : ''}</div>`; }).join('') + (matches.length > visible.length ? `<button class="load-more" id="loadMore" type="button">Mostrar mais · ${visible.length} de ${matches.length}</button>` : '');
+  $('achievementList').querySelectorAll('.achievement input').forEach(input => input.addEventListener('change', () => { const next = selectedIds(); input.checked ? next.add(input.dataset.id) : next.delete(input.dataset.id); state.selected[state.gameId] = [...next]; if (!input.checked && state.reasons[state.gameId]) delete state.reasons[state.gameId][input.dataset.id]; persist(); renderAchievements(); renderReview(); }));
+  $('achievementList').querySelectorAll('.reason-select').forEach(select => select.addEventListener('change', () => { state.reasons[state.gameId] ||= {}; if (select.value in REASONS) state.reasons[state.gameId][select.dataset.id] = select.value; else delete state.reasons[state.gameId][select.dataset.id]; persist(); renderReview(); }));
   $('loadMore')?.addEventListener('click', () => { state.visibleLimit += 100; renderAchievements(); });
 }
 function renderReview() {
   const ids = selectedIds(); const list = achievements().filter(a => ids.has(a.id));
   $('reviewCount').textContent = list.length; $('navCount').textContent = totalSelected();
   const verified = probeIsFresh(state.gameId);
-  $('exportButton').disabled = !list.length; $('unlockButton').disabled = !state.writeEnabled || list.length !== 1 || !verified;
+  const alreadyUnlocked = list.length === 1 && knownState(state.gameId, list[0].id) === true;
+  $('exportButton').disabled = !list.length; $('unlockButton').disabled = !state.writeEnabled || list.length !== 1 || !verified || alreadyUnlocked;
   $('riskTitle').textContent = 'Uso por sua conta e risco';
   $('riskDetail').textContent = 'Sem garantia contra punições no jogo ou na Steam';
-  $('nativeStatus').textContent = !state.writeEnabled ? 'Modo somente leitura. Nenhum desbloqueio pode ser enviado.' : list.length > 1 ? 'Envio experimental limitado a uma conquista por confirmação.' : verified ? 'Conta verificada nesta sessão. O envio depende da Steam e do jogo.' : 'Verifique a conta antes de cada envio. O Atlas usa a sessão Steam já aberta.';
-  $('reviewItems').innerHTML = list.length ? list.map(a => `<div class="review-item"><span>${escapeHTML(a.name)}</span></div>`).join('') : '<div class="review-empty">Suas conquistas selecionadas aparecerão aqui.</div>';
+  $('nativeStatus').textContent = !state.writeEnabled ? 'Modo somente leitura. Nenhum desbloqueio pode ser enviado.' : list.length > 1 ? 'Envio experimental limitado a uma conquista por confirmação.' : alreadyUnlocked ? 'Esta conquista já aparece como desbloqueada.' : verified ? 'Conta verificada nesta sessão. O envio depende da Steam e do jogo.' : 'Verifique a conta antes de cada envio. O Atlas usa a sessão Steam já aberta.';
+  $('reviewItems').innerHTML = list.length ? list.map(a => `<div class="review-item"><span>${escapeHTML(a.name)}${reasonFor(state.gameId, a.id) ? `<small>${escapeHTML(reasonFor(state.gameId, a.id))}</small>` : ''}</span></div>`).join('') : '<div class="review-empty">Suas conquistas selecionadas aparecerão aqui.</div>';
 }
 function render() { renderGames(); renderAchievements(); renderReview(); }
 function showModal(title, text, fields, submitLabel, onSubmit) {
@@ -156,6 +165,7 @@ async function importCatalog(file) {
   state.catalogs[state.gameId] = catalog;
   state.catalogSources[state.gameId] = 'JSON importado';
   state.selected[state.gameId] = (state.selected[state.gameId] || []).filter(id => catalog.some(a => a.id === id));
+  if (state.reasons[state.gameId]) for (const id of Object.keys(state.reasons[state.gameId])) if (!catalog.some(a => a.id === id)) delete state.reasons[state.gameId][id];
   persist(); render();
 }
 async function consultPublicCatalog() {
@@ -213,7 +223,7 @@ async function probeAccount() {
 }
 function confirmUnlock() {
   const appid = state.gameId; const ids = achievements().filter(a => selectedIds().has(a.id)).map(a => a.id);
-  if (ids.length !== 1 || !probeIsFresh(appid)) { renderReview(); return; }
+  if (ids.length !== 1 || !probeIsFresh(appid) || knownState(appid, ids[0]) === true) { renderReview(); return; }
   const pending = ids.filter(id => !state.native[appid][id]).length;
   showModal('Confirmar desbloqueio', `Você está prestes a enviar ${pending} conquista(s) de ${game()?.name} para a Steam. Isso pode contrariar regras da Steam ou do jogo e resultar em punições, inclusive na conta. O uso é por sua conta e risco. Não recomendamos uso em jogos competitivos online. Não há garantia de sucesso ou de ausência de banimento.`, '<label class="risk-confirm"><input type="checkbox" id="acceptRisk"> Li o aviso e assumo os riscos desta ação.</label>', 'Enviar à Steam', async modal => {
     if (!$('acceptRisk').checked) return error('Marque a confirmação para continuar.');
@@ -238,7 +248,7 @@ function confirmUnlock() {
   });
 }
 function exportSelection() {
-  const ids = selectedIds(); const data = { format: 'atlas-selection-v1', game: { appid: state.gameId, name: game()?.name }, achievements: achievements().filter(a => ids.has(a.id)).map(a => ({ id: a.id, name: a.name })), exportedAt: new Date().toISOString(), appliedToSteam: false };
+  const ids = selectedIds(); const data = { format: 'atlas-selection-v1', game: { appid: state.gameId, name: game()?.name }, achievements: achievements().filter(a => ids.has(a.id)).map(a => ({ id: a.id, name: a.name, ...(reasonFor(state.gameId, a.id) ? { reason: reasonFor(state.gameId, a.id) } : {}) })), exportedAt: new Date().toISOString(), appliedToSteam: false };
   const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); link.download = `atlas-selecao-${state.gameId}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 async function start() {
@@ -255,7 +265,7 @@ async function start() {
   $('achievementSearch').addEventListener('input', e => { state.achievementSearch = e.target.value; state.visibleLimit = 100; renderAchievements(); });
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { state.filter = t.dataset.filter; state.visibleLimit = 100; renderAchievements(); }));
   $('selectVisible').addEventListener('click', () => { const ids = selectedIds(); filteredAchievements().slice(0, state.visibleLimit).forEach(a => ids.add(a.id)); state.selected[state.gameId] = [...ids]; persist(); renderAchievements(); renderReview(); });
-  $('clearSelection').addEventListener('click', () => { state.selected[state.gameId] = []; persist(); renderAchievements(); renderReview(); });
+  $('clearSelection').addEventListener('click', () => { state.selected[state.gameId] = []; delete state.reasons[state.gameId]; persist(); renderAchievements(); renderReview(); });
   $('addGame').addEventListener('click', addGame);
   $('importButton').addEventListener('click', () => $('fileInput').click());
   $('publicButton').addEventListener('click', consultPublicCatalog);
