@@ -19,6 +19,15 @@ function findNativeDll(appid, libraryPaths) {
       const file = path.join(root, relative);
       try { if (fs.statSync(file).isFile()) return file; } catch { /* Try next known location. */ }
     }
+    try {
+      for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+        if (!entry.isDirectory() || !entry.name.endsWith('_Data')) continue;
+        for (const name of ['steam_api64.dll', 'steam_api.dll']) {
+          const file = path.join(root, entry.name, 'Plugins', 'x86_64', name);
+          try { if (fs.statSync(file).isFile()) return file; } catch { /* Try next library. */ }
+        }
+      }
+    } catch { /* Try another Steam installation. */ }
   }
   throw new Error('Não foi encontrada a biblioteca Steamworks deste jogo. Instale-o pela Steam ou use outro jogo compatível.');
 }

@@ -1,6 +1,1 @@
-node_modules/
-runtime/
-.env
-.env.*
-*.log
-steam_appid.txt
+logs/

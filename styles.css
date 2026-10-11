@@ -51,6 +51,9 @@ main { max-width: 1520px; margin: 0 auto; padding: 20px; }
 .panel { min-width: 0; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); overflow: hidden; }
 .library-panel, .achievements-panel { padding: 14px; }
 .panel-head { min-height: 36px; display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 12px; }
+.panel-head-actions { display: flex; align-items: center; gap: 9px; }
+.library-status { min-height: 0; margin-top: 5px; color: var(--muted); font-size: 9px; }
+.library-status:empty { display: none; }
 .panel h2 { margin: 3px 0 0; font-size: 16px; line-height: 1.2; letter-spacing: -.2px; }
 .text-btn { padding: 3px 0; color: var(--blue-light); background: none; border: 0; font-size: 10px; font-weight: 700; white-space: nowrap; }
 .text-btn:hover { text-decoration: underline; }
@@ -116,8 +119,6 @@ input::placeholder { color: #7790a4; }
 .achievement-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 .achievement-info span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 3px; color: var(--muted); font-size: 10px; }
 .achievement-status { color: #a1bed0; font-size: 9px; font-weight: 700; white-space: nowrap; }
-.reason-row { display: flex; align-items: center; gap: 8px; padding: 0 10px 8px 36px; color: #9aafbf; font-size: 9px; }
-.reason-select { max-width: 180px; min-width: 0; padding: 4px 7px; color: #d6e3eb; background: #17232c; border: 1px solid #425968; border-radius: 5px; font-size: 10px; }
 .empty-state { padding: 36px 16px; text-align: center; color: var(--muted); }
 .empty-state .empty-icon { display: none; }
 .empty-state strong { display: block; color: var(--text); font-size: 12px; }
@@ -132,7 +133,6 @@ input::placeholder { color: #7790a4; }
 .review-item { display: flex; align-items: center; gap: 6px; padding: 8px 0; border-bottom: 1px solid #34424e; color: #d5e1e8; font-size: 10px; }
 .review-item::before { content: '✓'; color: var(--blue-light); font-weight: 800; }
 .review-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.review-item small { display: block; margin-top: 3px; color: #9db5c6; font-size: 9px; }
 .risk-state { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0; padding: 9px; border: 1px solid #605039; border-radius: 7px; background: #252319; }
 .risk-light { width: 7px; height: 7px; flex: none; margin-top: 3px; border-radius: 50%; background: var(--amber); }
 .risk-state strong, .risk-state small { display: block; }

@@ -2,10 +2,13 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
+const { randomUUID, createHmac } = require('node:crypto');
 const { readSchema } = require('./steam-schema');
 const { getPublicCatalog } = require('./public-catalog');
 const { runNative, authorizeUnlock } = require('./steam-native');
 const { verifyUnlock } = require('./verify-unlock');
+const { createActivityLog, classifyError } = require('./activity-log');
+const { assertNoOtherSteamGame } = require('./active-game-check');
 
 const ROOT = __dirname;
 const PORT = 47621;
@@ -14,6 +17,9 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=u
 let nativeBusy = false;
 const recentProbes = new Map();
 const PROBE_TTL_MS = 5 * 60 * 1000;
+const activityLog = createActivityLog(ROOT);
+const fingerprintSecret = randomUUID();
+function accountFingerprint(steamId) { return createHmac('sha256', fingerprintSecret).update(steamId).digest('hex').slice(0, 16); }
 
 function decodeVdf(value) { return value.replace(/\\\\/g, '\\').replace(/\\"/g, '"'); }
 function vdfValue(contents, key) {
@@ -104,31 +110,48 @@ const server = http.createServer((req, res) => {
     if (req.headers['content-type']?.split(';')[0] !== 'application/json') return send(res, 415, { error: 'Use application/json.' });
     if (nativeBusy) return send(res, 409, { error: 'Aguarde a operação anterior terminar.' });
     nativeBusy = true;
+    const operation = randomUUID();
+    const started = Date.now();
+    let logContext = { operation, action: url.pathname === '/api/native-unlock' ? 'unlock' : 'probe' };
     readJson(req).then(async body => {
       const mode = url.pathname === '/api/native-unlock' ? 'unlock' : 'probe';
       if (mode === 'unlock') {
         const authorized = authorizeUnlock(body);
+        logContext = { ...logContext, appid: authorized.appid, achievementId: authorized.ids[0] };
+        activityLog.record({ ...logContext, stage: 'started' });
+        await assertNoOtherSteamGame(authorized.appid, libraryPaths);
         const probe = recentProbes.get(authorized.appid);
         recentProbes.delete(authorized.appid);
         if (!probe || Date.now() - probe.time > PROBE_TTL_MS) throw new Error('Verifique a conta Steam novamente antes do envio.');
         const result = await runNative(mode, authorized.appid, authorized.ids, libraryPaths, probe.steamId);
+        try { activityLog.record({ ...logContext, stage: 'submitted', count: result.submitted?.length || 0, elapsedMs: Date.now() - started }); }
+        catch (logError) { console.error('Falha ao gravar log local:', logError.code || 'UNKNOWN'); }
         const verification = await verifyUnlock({
           appid: authorized.appid,
           steamId: probe.steamId,
           id: authorized.ids[0],
           readState: () => runNative('probe', authorized.appid, [], libraryPaths)
         });
+        try { activityLog.record({ ...logContext, stage: 'finished', result: result.submitted?.length ? verification.status : 'already-unlocked', elapsedMs: Date.now() - started }); }
+        catch (logError) { console.error('Falha ao gravar log local:', logError.code || 'UNKNOWN'); }
         return { ...result, verification };
       }
       if (!body || !/^\d{1,12}$/.test(String(body.appid))) throw new Error('App ID inválido.');
       const appid = String(body.appid);
+      logContext = { ...logContext, appid };
+      activityLog.record({ ...logContext, stage: 'started' });
       recentProbes.delete(appid);
       return runNative(mode, appid, [], libraryPaths).then(result => {
         if (!/^7656119\d{10}$/.test(result.steamId) || String(result.appId) !== appid) throw new Error('Não foi possível validar jogo e conta Steam.');
         recentProbes.set(appid, { steamId: result.steamId, time: Date.now() });
-        return result;
+        activityLog.record({ ...logContext, stage: 'finished', count: result.total, elapsedMs: Date.now() - started });
+        return { ...result, accountFingerprint: accountFingerprint(result.steamId) };
       });
-    }).then(result => { const { steamId, ...publicResult } = result; send(res, 200, publicResult); }).catch(error => { if (!res.destroyed) send(res, 400, { error: error.message }); }).finally(() => { nativeBusy = false; });
+    }).then(result => { const { steamId, ...publicResult } = result; send(res, 200, publicResult); }).catch(error => {
+      try { activityLog.record({ ...logContext, stage: 'failed', errorCode: classifyError(error), elapsedMs: Date.now() - started }); }
+      catch (logError) { console.error('Falha ao gravar log local:', logError.code || 'UNKNOWN'); }
+      if (!res.destroyed) send(res, 400, { error: error.message });
+    }).finally(() => { nativeBusy = false; });
     return;
   }
   if (req.method !== 'GET') return send(res, 405, { error: 'Método não permitido' });
