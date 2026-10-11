@@ -23,7 +23,7 @@ Se quiser apenas explorar a interface sem opção de envio, use `Somente leitura
 
 No navegador, escolha o jogo, clique em **Verificar conta**, revise as faltantes e confirme somente a seleção que deseja enviar. O Atlas faz uma nova verificação antes de **cada conquista**. Feche a janela preta para encerrar o servidor.
 
-Antes de cada envio, o Atlas verifica se outro jogo da Steam está em execução no Windows e recusa a operação se encontrar um. Feche jogos competitivos antes de testar. Essa verificação não garante ausência de punições.
+O Atlas não verifica quais outros jogos estão abertos. Feche jogos competitivos antes de testar; qualquer envio fica por sua conta e risco.
 
 **Logs locais:** tentativas de verificação e envio ficam em `logs/atlas-events.jsonl` (até 1 MB por arquivo, com duas cópias antigas). Cada linha contém horário, App ID, etapa, duração e resultado; a conquista é identificada por hash. O arquivo não registra Steam ID, senha, nomes ou respostas brutas e não é servido pela interface. Confira esse arquivo antes de compartilhá-lo.
 
@@ -54,7 +54,7 @@ To explore without a send option, run `Somente leitura.cmd`. Close any older Atl
 
 In the browser, choose a game, click **Verify account**, review missing achievements, and confirm only the selection you want to send. Atlas checks the account again before **each achievement**. Close the console window to stop the server.
 
-Before each send, Atlas checks whether another Steam game is running on Windows and refuses the operation if it finds one. Close competitive games before testing. This check does not guarantee freedom from penalties.
+Atlas does not check which other games are running. Close competitive games before testing; any send is at your own risk.
 
 **Local logs:** probe and send attempts are saved in `logs/atlas-events.jsonl` (up to 1 MB per file, with two older copies). Each line contains time, App ID, stage, duration, and result; achievements use a hash. Steam ID, passwords, names, and raw connector responses are not logged. The interface does not serve this file. Review it before sharing.
 

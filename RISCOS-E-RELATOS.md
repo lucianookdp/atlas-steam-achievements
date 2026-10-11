@@ -14,4 +14,4 @@ Pesquisa feita em 10 de outubro de 2026. Relatos de fóruns são evidência limi
 
 O [Acordo de Assinatura da Steam, seção 4](https://store.steampowered.com/subscriber_agreement/) restringe trapaças e automação e prevê medidas sobre conta ou assinatura. A [documentação do Steam Workshop](https://partner.steamgames.com/doc/features/workshop) descreve mods integrados pelos jogos; ela não transforma toda ferramenta externa em mod nem autoriza universalmente alterar conquistas.
 
-O teste do Atlas com **uma** conquista de Zup! 8 mostrou que o envio pela API Steamworks funcionou com o jogo fechado. Não mede a chance de punição futura. Por isso, o projeto inicia em **modo somente leitura**, identifica o método externo com clareza e não promete segurança para a conta.
+O teste do Atlas com **uma** conquista de Zup! 8 mostrou que o envio pela API Steamworks funcionou com o jogo fechado. Não mede a chance de punição futura. `Somente leitura.cmd` abre sem opção de envio; `Abrir Atlas.cmd` habilita o envio apenas após verificação e confirmação na interface. O projeto identifica o método externo com clareza e não promete segurança para a conta.

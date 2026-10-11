@@ -12,7 +12,7 @@ O [Steam Achievement Manager (SAM)](https://github.com/gibbed/SteamAchievementMa
 
 - Manter sessão Steam local, checagem do App ID e identificação da conta antes de qualquer escrita.
 - Manter uma conquista por operação, com releitura depois de cada envio, como solicitado para o Atlas.
-- Recusar envios enquanto outro jogo da Steam estiver em execução; isso evita a simultaneidade observada com CS, mas não cobre todos os riscos.
+- Não bloquear envios com base na lista de processos do Windows; a verificação anterior gerava falso positivo. O usuário decide quando testar e deve revisar os jogos abertos.
 - Preservar logs locais sem Steam ID, senha ou respostas brutas.
 - Avaliar um conector baseado em `steamclient64.dll` em implementação separada e desativada por padrão. O conector atual usa a DLL Steamworks do jogo; trocar o backend sem validação pode quebrar a leitura ou a gravação. A migração só deve substituir o conector atual depois de testes locais, com o usuário controlando qualquer teste real.
 
