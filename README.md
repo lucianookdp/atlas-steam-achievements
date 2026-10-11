@@ -1,88 +1,49 @@
-# Atlas — protótipo de conquistas Steam
+# Atlas · Steam Achievements
 
-Versão experimental para Windows. Permite selecionar e consultar conquistas pela Steam. **Inicia em modo somente leitura**, sem envio de desbloqueios. O conector externo de envio continua no código para testes optativos, com ativação local explícita. **O uso é por conta e risco da pessoa usuária; não há garantia contra banimentos nem de compatibilidade com todos os jogos.**
+[Português](#português) · [English](#english)
 
-## Iniciar
+## Português
 
-1. Use a sessão Steam que já está aberta no computador. O Atlas não tem tela de login e não pede usuário, senha ou código. Para consultar ou alterar conquistas da conta, a Steam precisa estar aberta e autenticada; o jogo precisa estar instalado pela Steam.
-2. Dê dois cliques em `start.cmd`. Nesta versão de desenvolvimento, é necessário ter Node.js 18 ou superior instalado. O inicializador também aceita um `node.exe` portátil colocado em `runtime/` para uma futura distribuição sem instalação.
-3. O navegador deve abrir automaticamente. Acesse `http://127.0.0.1:47621` se não abrir.
-4. Escolha o jogo e marque as conquistas que quer acompanhar. A seleção e os motivos ficam salvos neste navegador. **Verificar conta** é opcional para consultar o progresso real e identificar as faltantes; o botão **Desbloquear na Steam** fica desativado no modo padrão.
+O Atlas é uma interface local para encontrar, organizar e revisar conquistas Steam. **Abre em modo somente leitura.** Não pede login nem senha; para consultar sua conta, usa a sessão Steam já aberta no computador.
 
-O servidor escuta apenas em `127.0.0.1` e não instala pacotes. **Consultar Steam** usa a API pública, envia apenas o App ID, não usa senha ou chave de API, aplica intervalo mínimo de 3 segundos entre consultas e guarda o resultado em memória por 24 horas. **Verificar conta** e **Desbloquear na Steam** usam a sessão já aberta no aplicativo Steam. O Atlas não inicia a Steam automaticamente. Feche a janela do terminal para encerrar.
+### Instalar e abrir
 
-## O que já funciona
+1. Baixe o [ZIP do projeto](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip) e extraia a pasta.
+2. No Windows, instale o [Node.js](https://nodejs.org/) 18 ou superior, se ainda não tiver.
+3. Com a Steam aberta, execute `start.cmd`. Se o navegador não abrir, acesse `http://127.0.0.1:47621`.
 
-- Detecta jogos instalados pelas bibliotecas locais da Steam.
-- Lê automaticamente nomes, descrições e conquistas ocultas do cache local `UserGameStatsSchema_<AppID>.bin`, quando disponível.
-- Permite adicionar um jogo por App ID e importar um catálogo JSON.
-- Permite consultar, sob demanda, a API pública da Steam. A resposta contém IDs e percentuais globais, que podem não incluir nomes e descrições legíveis.
-- Permite buscar, filtrar por faltantes confirmadas ou marcadas, selecionar, limpar e exportar a seleção para JSON. Cada conquista marcada pode receber um motivo opcional: servidor fechado, bug no jogo, save perdido ou outro.
-- Mostra o progresso do jogo após uma leitura da conta. Antes dessa leitura, não presume que conquistas do catálogo estejam faltando. O jogo de demonstração usa estados fictícios para experimentar os filtros sem acessar a Steam.
-- Interface compacta e adaptável, organizada em Biblioteca, Conquistas e Seleção, com tema grafite e azul discreto, ícone de troféu próprio e rodapé com link para o GitHub do autor. Em janelas estreitas, os painéis se empilham sem rolagem horizontal.
-- Verifica o estado real das conquistas pela API local Steamworks do jogo instalado. Confere o App ID devolvido pela Steam e identifica a conta ativa antes de ler ou enviar. Conquistas já desbloqueadas são identificadas e ignoradas no envio.
-- O conector experimental envia **uma conquista por confirmação** por `SetAchievement` e `StoreStats`, após ativação local e confirmação explícita na interface. Exige uma verificação da mesma conta nos cinco minutos anteriores; ela é consumida pelo envio. A seleção e a exportação podem conter várias conquistas. Não altera estatísticas do jogo nem remove conquistas.
-- Após um envio aceito, lê novamente o estado da mesma conta e do mesmo jogo. Mostra **confirmada** se a conquista aparecer desbloqueada, **ainda pendente** se continuar bloqueada após uma segunda consulta, ou **resultado não confirmado** se a releitura falhar. Antes de outro envio, exige nova verificação da conta.
-- Guarda catálogos importados, seleções, motivos e o último jogo aberto no armazenamento local do navegador para continuar depois.
-- Inclui um jogo de demonstração para experimentar a interface.
-- Oferece atalhos para Mad Max, Baldur's Gate 3, Divinity: Original Sin 2 e Cyberpunk 2077 como exemplos de uso. Os atalhos não indicam que esses jogos foram avaliados como seguros.
+### Usar
 
-O JSON importado pode ser um array de objetos `{ "id": "ID", "name": "Nome", "description": "Descrição" }`, um objeto com campo `achievements`, ou uma resposta `GetSchemaForGame` da Steam.
+1. Escolha um jogo. **Jogo de demonstração** permite testar a interface sem acessar sua conta.
+2. Busque e marque conquistas. Você pode indicar “servidor fechado”, “bug”, “save perdido” ou outro motivo. A seleção fica salva neste navegador.
+3. Clique em **Verificar conta** somente quando quiser ver o progresso real e o filtro **Faltantes**. Para jogos reais, isso exige Steam aberta e jogo instalado.
+4. Revise a seleção e, se quiser, exporte um JSON. O botão de desbloqueio fica desativado no modo padrão.
 
-## Limites desta versão
+**Envio experimental:** para habilitar deliberadamente o botão, abra o PowerShell na pasta do projeto e execute `$env:ATLAS_ENABLE_EXPERIMENTAL_WRITES='1'; node server.js`. O Atlas exige nova verificação e confirmação para **cada conquista**. Feche com `Ctrl+C`; `start.cmd` sempre volta ao modo somente leitura.
 
-- O desbloqueio só fica disponível quando a pessoa inicia `node server.js` com `ATLAS_ENABLE_EXPERIMENTAL_WRITES=1`, **Verificar conta** conclui com sucesso e há uma seleção. O botão fica indisponível para o jogo de demonstração. `start.cmd` sempre limpa a opção e inicia em modo somente leitura.
-- O conector atual requer Windows, uma sessão Steam aberta, jogo instalado e `steam_api64.dll` ou `steam_api.dll` em um dos locais comuns da instalação. Alguns jogos usam versões ou locais diferentes, ou administram conquistas no servidor; nesses casos a operação pode falhar.
-- `StoreStats` informa que a solicitação foi aceita localmente. A releitura automática confirma o estado retornado pela API local naquele momento; confira também o perfil Steam. O aplicativo não promete que a conquista aparecerá nem que o jogo aceitará a alteração.
-- Só detecta automaticamente jogos instalados. Jogos fora da instalação podem ser adicionados por App ID.
-- O cache de conquistas pode não existir para todos os jogos. Nesses casos, use **Consultar Steam** ou a importação JSON. A consulta pública pode falhar ou não retornar conquistas para alguns jogos.
-- **Uso por conta e risco da pessoa usuária.** O desbloqueio poderá resultar em punições no jogo ou na conta Steam. O projeto não promete evitar banimentos nem garante segurança para qualquer jogo.
-- O uso em jogos competitivos online não é recomendado. A interface não bloqueia jogos específicos: permite selecionar e exportar conquistas de qualquer App ID cujo catálogo esteja disponível.
-- Antes de cada envio, a interface apresenta o aviso e exige confirmação explícita. Um aviso não impede punições nem substitui a avaliação dos riscos pela pessoa usuária.
-- Risco de punição aplicada pelo jogo deve ser considerado separadamente. Um *game ban* pode aparecer na conta Steam; portanto, a distinção não pode ser feita apenas pelo nome do banimento.
-- Nenhum programa pode prometer risco zero de banimento. As regras da Steam e de cada jogo podem afetar o resultado.
-- O [Acordo de Assinatura da Steam, seção 4](https://store.steampowered.com/subscriber_agreement/) restringe trapaças e automação e prevê restrição ou encerramento de conta ou assinatura em certas violações. Um teste bem-sucedido não significa autorização da Valve nem risco zero.
-- No teste controlado de Zup! 8 (App ID 799070), uma conquista pendente foi enviada com o jogo fechado e apareceu desbloqueada em uma nova leitura. Isso valida esse caso específico; não estabelece segurança para a conta nem compatibilidade com outros jogos.
-- A [Steamworks](https://partner.steamgames.com/doc/api/ISteamUserStats) oferece leitura do horário de desbloqueio, mas `SetAchievement` não aceita um horário arbitrário. Este projeto não altera datas históricas de conquistas.
+**Risco:** desbloquear conquistas pode contrariar regras da Steam ou do jogo e resultar em punições, inclusive na conta. Não recomendamos uso em jogos competitivos online. Não há garantia de sucesso, compatibilidade ou ausência de banimento. Leia [riscos e relatos](RISCOS-E-RELATOS.md).
 
-## Como o aplicativo deve funcionar sem ocultar sua atividade
+Execute `npm test` para rodar testes locais com dados simulados, sem consultar sua conta nem enviar conquistas. O Atlas não altera a data histórica das conquistas.
 
-O Atlas roda como uma interface local no navegador, com servidor ligado somente a `127.0.0.1`. Ele lê arquivos de instalação e cache da Steam. A operação de desbloqueio roda em um processo separado e usa a biblioteca Steamworks de 64 bits instalada com o jogo. Ela não pede senha, não inicia o jogo, não injeta código no processo do jogo, não troca DLLs e não tenta contornar sistemas de proteção. O servidor exige JSON e recusa origens de navegador diferentes da interface local.
+## English
 
-Nenhum jogo tem seleção ou exportação bloqueada por categoria. O aviso de risco fica visível na interface, inclusive para jogos competitivos online. O conector não garante suporte universal. Código aberto e execução transparente ajudam a auditar o comportamento, mas não garantem ausência de punição.
+Atlas is a local interface for finding, organizing, and reviewing Steam achievements. **It starts in read only mode.** Atlas does not ask for a login or password; account checks use the Steam session already open on your computer.
 
-## Mod do jogo e conector externo
+### Install and open
 
-O método testado com Zup! 8 é uma **ferramenta externa** que usa a DLL Steamworks do jogo. Ele não é um mod carregado pelo jogo. A [documentação do Steam Workshop](https://partner.steamgames.com/doc/features/workshop) descreve integrações que dependem de o próprio jogo aceitar conteúdo ou mods; isso não cria uma permissão universal para desbloquear conquistas. Chamar o conector externo de “mod” não muda seu funcionamento ou seus riscos.
+1. Download the [project ZIP](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip) and extract it.
+2. On Windows, install [Node.js](https://nodejs.org/) 18 or newer if needed.
+3. With Steam open, run `start.cmd`. If your browser does not open, visit `http://127.0.0.1:47621`.
 
-Uma futura integração classificada como **mod do jogo** deverá usar um caminho de modificação suportado por aquele jogo, operar dentro dele e informar quais APIs e permissões usa. Isso exige implementação e avaliação por jogo. Mesmo um mod aceito pelo jogo não é garantia de ausência de punição da Steam ou de serviços de terceiros.
+### Use
 
-### Ativação experimental do envio
+1. Choose a game. **Demo game** lets you try the interface without accessing your account.
+2. Search and mark achievements. You can add a reason such as “server closed,” “game bug,” or “lost save.” Your selection is saved in this browser.
+3. Click **Verify account** only when you want to see real progress and the **Missing** filter. For real games, Steam must be open and the game installed.
+4. Review your selection and optionally export a JSON file. Unlocking is disabled in the default mode.
 
-Para testes deliberados, abra um terminal na pasta do projeto e execute `set ATLAS_ENABLE_EXPERIMENTAL_WRITES=1` seguido de `node server.js` no mesmo terminal. No PowerShell, use `$env:ATLAS_ENABLE_EXPERIMENTAL_WRITES='1'` seguido de `node server.js`. O servidor só lê essa opção ao iniciar. Desative fechando o servidor e abrindo normalmente com `start.cmd`. A confirmação de risco continua obrigatória para cada envio.
+**Experimental sending:** to deliberately enable the unlock button, open PowerShell in the project folder and run `$env:ATLAS_ENABLE_EXPERIMENTAL_WRITES='1'; node server.js`. Atlas requires a fresh verification and confirmation for **each achievement**. Stop with `Ctrl+C`; `start.cmd` always returns to read only mode.
 
-### Referência específica: Cyberpunk 2077
+**Risk:** unlocking achievements may violate Steam or game rules and lead to penalties, including on your account. We do not recommend competitive online games. There is no guarantee of success, compatibility, or freedom from bans. See [risks and reports](RISCOS-E-RELATOS.md) (Portuguese).
 
-O [Achievement Unlocker](https://www.nexusmods.com/cyberpunk2077/mods/12183) indicado pelo usuário exige Cyber Engine Tweaks, funciona dentro do jogo e oferece desbloqueio individual ou total. Seu código chama o sistema de conquistas do próprio Cyberpunk. A página do Nexus o classifica com a tag “Cheating”. Ele serviu apenas para análise de funcionamento; **o Atlas não depende dele nem de uma engine de mod**. A página informa que modificações nos arquivos do autor exigem permissão.
-
-## Ideias aproveitadas do SAM
-
-O [Steam Achievement Manager](https://github.com/gibbed/SteamAchievementManager) separa a escolha do jogo da gestão de conquistas. Ele lê o schema de conquistas no cache local, consulta o estado na Steam e permite marcar ou desmarcar conquistas e editar estatísticas antes de gravar as alterações. O Atlas usa a ideia de leitura local do catálogo e seleção revisável. Como proteção inspirada na verificação de jogo do SAM, o conector agora compara o App ID real retornado pela Steam com o selecionado. Também compara a conta ativa com a da verificação imediatamente anterior, limita o envio a uma conquista e inicia sempre em modo somente leitura.
-
-O SAM é distribuído sob [licença zlib](https://github.com/gibbed/SteamAchievementManager/blob/master/LICENSE.txt), que permite uso e modificação do código com preservação dos avisos exigidos. Esta versão do Atlas implementa seu próprio conector e não incorpora arquivos de código do SAM.
-
-## Arquivos
-
-Execute `npm test` para verificar parsing de schema, validação de envio, proteção HTTP, releitura e cache com dados simulados. A suíte força o modo somente leitura e não consulta a sessão Steam, não acessa a conta e não envia conquistas.
-
-- `server.js`: servidor local e descoberta de jogos.
-- `steam-schema.js`: leitura do cache binário de conquistas.
-- `steam-native.js`, `steam-native.ps1`: conector local Steamworks, isolado por processo.
-- `verify-unlock.js`: confirmação por releitura após cada envio.
-- `index.html`, `styles.css`, `app.js`: interface.
-- `start.cmd`: inicializador Windows.
-- `RISCOS-E-RELATOS.md`: fontes oficiais e relatos de fóruns, separados por tipo de punição.
-
-## Base técnica
-
-A [documentação da Steamworks](https://partner.steamgames.com/doc/api/ISteamUserStats) descreve `GetAchievement`, `SetAchievement` e `StoreStats`. O [cabeçalho oficial da API plana](https://github.com/ValveSoftware/source-sdk-2013/blob/master/src/public/steam/steam_api_flat.h) lista as funções usadas pelo conector. A leitura e o envio foram implementados neste projeto; nenhum código do SAM ou do mod citado foi copiado.
+Run `npm test` for local tests with simulated data; they do not check your account or send achievements. Atlas does not change historical unlock dates.
