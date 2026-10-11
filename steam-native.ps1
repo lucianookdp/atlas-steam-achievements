@@ -72,7 +72,8 @@ public static class SteamNative {
         if (module == IntPtr.Zero) throw new Exception("Não foi possível carregar a biblioteca Steamworks do jogo (erro " + Marshal.GetLastWin32Error() + ").");
         bool initialized = false;
         try {
-            InitFn init = Export<InitFn>(module, "SteamAPI_Init");
+            string initName = GetProcAddress(module, "SteamAPI_Init") != IntPtr.Zero ? "SteamAPI_Init" : "SteamAPI_InitSafe";
+            InitFn init = Export<InitFn>(module, initName);
             VoidFn shutdown = Export<VoidFn>(module, "SteamAPI_Shutdown");
             VoidFn callbacks = Export<VoidFn>(module, "SteamAPI_RunCallbacks");
             IntPtr accessor = IntPtr.Zero;

@@ -7,6 +7,10 @@ const { server, ENABLE_EXPERIMENTAL_WRITES } = require('./server');
 const { getPublicCatalog } = require('./public-catalog');
 const { validateIds, findNativeDll, authorizeUnlock } = require('./steam-native');
 const { verifyUnlock } = require('./verify-unlock');
+const { createActivityLog, safeEvent, classifyError } = require('./activity-log');
+const { assertNoOtherSteamGame, gameFolder } = require('./active-game-check');
+const os = require('node:os');
+const path = require('node:path');
 
 function str(value) { return Buffer.from(`${value}\0`, 'utf8'); }
 function field(type, key, value) { return Buffer.concat([Buffer.from([type]), str(key), value]); }
@@ -47,11 +51,44 @@ assert.equal(localRequest('GET', '/', { host: 'evil.example' }).status, 403);
 assert.equal(localRequest('GET', '/', { host: '127.0.0.1:47621', origin: 'https://evil.example' }).status, 403);
 assert.equal(JSON.parse(localRequest('GET', '/api/capabilities', { host: '127.0.0.1:47621' }).body).experimentalWritesEnabled, false);
 assert.deepEqual(Object.keys(COPY.pt).sort(), Object.keys(COPY.en).sort());
+assert.equal(classifyError(new Error('StoreStats falhou')), 'STORE_FAILED');
+assert.equal(classifyError(new Error('Outro jogo da Steam está aberto.')), 'OTHER_GAME_RUNNING');
+assert.equal(gameFolder('C:\\Steam\\steamapps\\common\\9 Kings\\9Kings.exe'), '9 kings');
+const sanitized = safeEvent({ action: 'unlock', stage: 'finished', operation: 'test', appid: '2784470', achievementId: 'ACH_TEST', result: 'confirmed', steamId: '76561190000000001', password: 'secret', error: 'raw error' });
+assert.equal(sanitized.appid, '2784470');
+assert.equal(sanitized.achievementHash.length, 16);
+assert.ok(!JSON.stringify(sanitized).includes('ACH_TEST'));
+assert.ok(!JSON.stringify(sanitized).includes('76561190000000001'));
+assert.ok(!JSON.stringify(sanitized).includes('secret'));
+const logRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-log-test-'));
+try {
+  const log = createActivityLog(logRoot);
+  log.record({ action: 'probe', stage: 'finished', operation: 'test', appid: '2784470', count: 50 });
+  const lines = fs.readFileSync(log.file, 'utf8').trim().split('\n');
+  assert.equal(lines.length, 1);
+  assert.equal(JSON.parse(lines[0]).count, 50);
+} finally {
+  fs.unlinkSync(path.join(logRoot, 'logs', 'atlas-events.jsonl'));
+  fs.rmdirSync(path.join(logRoot, 'logs'));
+  fs.rmdirSync(logRoot);
+}
 const html = fs.readFileSync(require('node:path').join(__dirname, 'index.html'), 'utf8');
 for (const [, key] of html.matchAll(/data-i18n(?:-placeholder|-aria)?="([^"]+)"/g)) assert.ok(COPY.pt[key], `Missing translation: ${key}`);
 console.log('Leitura de schema e limites HTTP locais: OK');
 
 (async () => {
+  const guardRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-guard-test-'));
+  try {
+    fs.mkdirSync(path.join(guardRoot, 'steamapps'));
+    fs.writeFileSync(path.join(guardRoot, 'steamapps', 'appmanifest_2784470.acf'), '"installdir" "9 Kings"');
+    const libraries = () => [guardRoot];
+    await assertNoOtherSteamGame('2784470', libraries, async () => ['C:\\Steam\\steamapps\\common\\9 Kings\\9Kings.exe']);
+    await assert.rejects(() => assertNoOtherSteamGame('2784470', libraries, async () => ['C:\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\game\\bin\\cs2.exe']), /Outro jogo/);
+  } finally {
+    fs.unlinkSync(path.join(guardRoot, 'steamapps', 'appmanifest_2784470.acf'));
+    fs.rmdirSync(path.join(guardRoot, 'steamapps'));
+    fs.rmdirSync(guardRoot);
+  }
   const identity = { appId: 799070, steamId: '76561190000000001' };
   const wait = async () => {};
   const confirmed = await verifyUnlock({ appid: '799070', steamId: identity.steamId, id: 'ACH_A', readState: async () => ({ ...identity, achievements: { ACH_A: true } }), wait });
