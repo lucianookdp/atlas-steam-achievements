@@ -4,22 +4,24 @@
 
 ## Português
 
-O Atlas é uma interface local para encontrar, organizar e revisar conquistas Steam. **Abre em modo somente leitura.** Não pede login nem senha; para consultar sua conta, usa a sessão Steam já aberta no computador.
+O Atlas é uma interface local para encontrar, organizar e revisar conquistas Steam. Não pede login nem senha; para consultar sua conta, usa a sessão Steam já aberta no computador. Abrir a interface não consulta a conta nem envia conquistas.
 
 ### Instalar e abrir
 
 1. Baixe o [ZIP do projeto](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip) e extraia a pasta.
 2. No Windows, instale o [Node.js](https://nodejs.org/) 18 ou superior, se ainda não tiver.
-3. Com a Steam aberta, execute `start.cmd`. Se o navegador não abrir, acesse `http://127.0.0.1:47621`.
+3. Com a Steam aberta, dê **dois cliques em `Abrir Atlas.cmd`**. Se o navegador não abrir, acesse `http://127.0.0.1:47621`. Deixe a janela preta aberta enquanto usa o Atlas.
+
+Se quiser apenas explorar a interface sem opção de envio, use `Somente leitura.cmd`. Feche qualquer janela antiga do Atlas antes de trocar de modo.
 
 ### Usar
 
 1. Escolha um jogo. Use **Atualizar** para procurar instalações novas. **Jogo de demonstração** permite testar a interface sem acessar sua conta.
 2. Busque e marque conquistas. A seleção fica salva neste navegador.
 3. Clique em **Verificar conta** quando quiser ver o progresso real. Isso habilita o filtro **Faltantes** e **Selecionar todos faltantes**. Para jogos reais, é preciso ter a Steam aberta e o jogo instalado.
-4. Revise sua seleção. O envio experimental fica desativado no modo padrão. Quando habilitado, a fila aceita até **60 conquistas** por confirmação, faz uma operação por conquista, verifica o resultado e para se houver incerteza. Antes de confirmar, escolha uma pausa de 15 ou 30 segundos, 1, 2 ou 5 minutos, um tempo personalizado (1 a 3600 segundos) ou um intervalo aleatório entre limites definidos por você. O primeiro envio é imediato; a pausa ocorre entre tentativas. Use **Parar** durante a fila, inclusive na contagem regressiva.
+4. Revise sua seleção. O envio exige confirmação na interface. A fila aceita até **60 conquistas** por confirmação, faz uma operação por conquista, verifica o resultado e para se houver incerteza. Antes de confirmar, escolha uma pausa de 15 ou 30 segundos, 1, 2 ou 5 minutos, um tempo personalizado (1 a 3600 segundos) ou um intervalo aleatório entre limites definidos por você. O primeiro envio é imediato; a pausa ocorre entre tentativas. Use **Parar** durante a fila, inclusive na contagem regressiva.
 
-**Para testar pela interface quando quiser:** feche qualquer janela antiga do Atlas e execute `testar-na-interface.cmd`. Abrir a página não consulta sua conta nem envia conquistas. No navegador, escolha 9 Kings, clique em **Verificar conta**, revise as faltantes e confirme somente a seleção que deseja enviar. O Atlas faz uma nova verificação antes de **cada conquista**. Feche a janela do programa para encerrar o servidor. `start.cmd` abre em modo somente leitura.
+No navegador, escolha o jogo, clique em **Verificar conta**, revise as faltantes e confirme somente a seleção que deseja enviar. O Atlas faz uma nova verificação antes de **cada conquista**. Feche a janela preta para encerrar o servidor.
 
 Antes de cada envio, o Atlas verifica se outro jogo da Steam está em execução no Windows e recusa a operação se encontrar um. Feche jogos competitivos antes de testar. Essa verificação não garante ausência de punições.
 
@@ -33,22 +35,24 @@ Execute `npm test` para rodar testes locais com dados simulados, sem consultar s
 
 ## English
 
-Atlas is a local interface for finding, organizing, and reviewing Steam achievements. **It starts in read only mode.** Atlas does not ask for a login or password; account checks use the Steam session already open on your computer.
+Atlas is a local interface for finding, organizing, and reviewing Steam achievements. Atlas does not ask for a login or password; account checks use the Steam session already open on your computer. Opening the interface does not check your account or send achievements.
 
 ### Install and open
 
 1. Download the [project ZIP](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip) and extract it.
 2. On Windows, install [Node.js](https://nodejs.org/) 18 or newer if needed.
-3. With Steam open, run `start.cmd`. If your browser does not open, visit `http://127.0.0.1:47621`.
+3. With Steam open, **double-click `Abrir Atlas.cmd`**. If your browser does not open, visit `http://127.0.0.1:47621`. Keep the console window open while using Atlas.
+
+To explore without a send option, run `Somente leitura.cmd`. Close any older Atlas window before switching modes.
 
 ### Use
 
 1. Choose a game. Use **Refresh** to find newly installed games. **Demo game** lets you try the interface without accessing your account.
 2. Search and mark achievements. Your selection is saved in this browser.
 3. Click **Verify account** when you want to see real progress. This enables the **Missing** filter and **Select all missing**. For real games, Steam must be open and the game installed.
-4. Review your selection. Experimental sending is disabled by default. When enabled, the queue accepts up to **60 achievements** per confirmation, runs one operation per achievement, verifies the result, and stops on uncertainty. Before confirming, choose a 15 or 30 second pause, 1, 2, or 5 minutes, a custom time (1 to 3600 seconds), or a random interval between limits you set. The first send is immediate; the wait is between attempts. Use **Stop** during the queue, including the countdown.
+4. Review your selection. Sending requires confirmation in the interface. The queue accepts up to **60 achievements** per confirmation, runs one operation per achievement, verifies the result, and stops on uncertainty. Before confirming, choose a 15 or 30 second pause, 1, 2, or 5 minutes, a custom time (1 to 3600 seconds), or a random interval between limits you set. The first send is immediate; the wait is between attempts. Use **Stop** during the queue, including the countdown.
 
-**To test through the interface when ready:** close any older Atlas window and run `testar-na-interface.cmd`. Opening the page does not check your account or send achievements. In the browser, choose 9 Kings, click **Verify account**, review the missing achievements, and confirm only the selection you want to send. Atlas checks the account again before **each achievement**. Close the program window to stop the server. `start.cmd` opens in read only mode.
+In the browser, choose a game, click **Verify account**, review missing achievements, and confirm only the selection you want to send. Atlas checks the account again before **each achievement**. Close the console window to stop the server.
 
 Before each send, Atlas checks whether another Steam game is running on Windows and refuses the operation if it finds one. Close competitive games before testing. This check does not guarantee freedom from penalties.
 

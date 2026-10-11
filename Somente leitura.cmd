@@ -1,11 +1,12 @@
 @echo off
-title Atlas - Teste real pela interface
+title Atlas - Somente leitura
 cd /d "%~dp0"
-set "ATLAS_ENABLE_EXPERIMENTAL_WRITES=1"
-echo Atlas: modo experimental habilitado nesta janela.
-echo Abrir o programa nao consulta sua conta nem envia conquistas.
-echo Acesse http://127.0.0.1:47621 se o navegador nao abrir.
-echo Feche esta janela para encerrar o servidor.
+set "ATLAS_ENABLE_EXPERIMENTAL_WRITES="
+echo ATLAS - Somente leitura
+echo.
+echo A interface vai abrir no navegador sem opcao de envio.
+echo Se nao abrir, acesse: http://127.0.0.1:47621
+echo Para encerrar, feche esta janela.
 echo.
 if exist "%~dp0runtime\node.exe" (
   "%~dp0runtime\node.exe" server.js
@@ -14,6 +15,7 @@ if exist "%~dp0runtime\node.exe" (
   if errorlevel 1 (
     echo Node.js 18 ou superior nao foi encontrado.
     echo Instale Node.js pelo site oficial: https://nodejs.org/
+    echo Depois, abra este arquivo novamente.
     pause
     exit /b 1
   )
