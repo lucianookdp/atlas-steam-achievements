@@ -8,7 +8,6 @@ const { getPublicCatalog } = require('./public-catalog');
 const { validateIds, findNativeDll, authorizeUnlock } = require('./steam-native');
 const { verifyUnlock } = require('./verify-unlock');
 const { createActivityLog, safeEvent, classifyError } = require('./activity-log');
-const { assertNoOtherSteamGame, gameFolder } = require('./active-game-check');
 const os = require('node:os');
 const path = require('node:path');
 
@@ -60,8 +59,6 @@ assert.throws(() => parseIntervalConfig({ mode: 'custom', customSeconds: '0' }),
 assert.throws(() => parseIntervalConfig({ mode: 'random', minSeconds: '120', maxSeconds: '60' }), /máximo/);
 assert.equal(formatCountdown(60_000), '1:00');
 assert.equal(classifyError(new Error('StoreStats falhou')), 'STORE_FAILED');
-assert.equal(classifyError(new Error('Outro jogo da Steam está aberto.')), 'OTHER_GAME_RUNNING');
-assert.equal(gameFolder('C:\\Steam\\steamapps\\common\\9 Kings\\9Kings.exe'), '9 kings');
 const sanitized = safeEvent({ action: 'unlock', stage: 'finished', operation: 'test', appid: '2784470', achievementId: 'ACH_TEST', result: 'confirmed', steamId: '76561190000000001', password: 'secret', error: 'raw error' });
 assert.equal(sanitized.appid, '2784470');
 assert.equal(sanitized.achievementHash.length, 16);
@@ -85,18 +82,6 @@ for (const [, key] of html.matchAll(/data-i18n(?:-placeholder|-aria)?="([^"]+)"/
 console.log('Leitura de schema e limites HTTP locais: OK');
 
 (async () => {
-  const guardRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'atlas-guard-test-'));
-  try {
-    fs.mkdirSync(path.join(guardRoot, 'steamapps'));
-    fs.writeFileSync(path.join(guardRoot, 'steamapps', 'appmanifest_2784470.acf'), '"installdir" "9 Kings"');
-    const libraries = () => [guardRoot];
-    await assertNoOtherSteamGame('2784470', libraries, async () => ['C:\\Steam\\steamapps\\common\\9 Kings\\9Kings.exe']);
-    await assert.rejects(() => assertNoOtherSteamGame('2784470', libraries, async () => ['C:\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\game\\bin\\cs2.exe']), /Outro jogo/);
-  } finally {
-    fs.unlinkSync(path.join(guardRoot, 'steamapps', 'appmanifest_2784470.acf'));
-    fs.rmdirSync(path.join(guardRoot, 'steamapps'));
-    fs.rmdirSync(guardRoot);
-  }
   const identity = { appId: 799070, steamId: '76561190000000001' };
   const wait = async () => {};
   const confirmed = await verifyUnlock({ appid: '799070', steamId: identity.steamId, id: 'ACH_A', readState: async () => ({ ...identity, achievements: { ACH_A: true } }), wait });

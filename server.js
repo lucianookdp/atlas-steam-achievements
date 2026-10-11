@@ -8,7 +8,6 @@ const { getPublicCatalog } = require('./public-catalog');
 const { runNative, authorizeUnlock } = require('./steam-native');
 const { verifyUnlock } = require('./verify-unlock');
 const { createActivityLog, classifyError } = require('./activity-log');
-const { assertNoOtherSteamGame } = require('./active-game-check');
 
 const ROOT = __dirname;
 const PORT = 47621;
@@ -119,7 +118,6 @@ const server = http.createServer((req, res) => {
         const authorized = authorizeUnlock(body);
         logContext = { ...logContext, appid: authorized.appid, achievementId: authorized.ids[0] };
         activityLog.record({ ...logContext, stage: 'started' });
-        await assertNoOtherSteamGame(authorized.appid, libraryPaths);
         const probe = recentProbes.get(authorized.appid);
         recentProbes.delete(authorized.appid);
         if (!probe || Date.now() - probe.time > PROBE_TTL_MS) throw new Error('Verifique a conta Steam novamente antes do envio.');

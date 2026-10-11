@@ -34,8 +34,6 @@ function classifyError(error) {
   if (/conta.*mudou|conta mudou/i.test(message)) return 'ACCOUNT_CHANGED';
   if (/App ID.*corresponde/i.test(message)) return 'APP_MISMATCH';
   if (/StoreStats/i.test(message)) return 'STORE_FAILED';
-  if (/Outro jogo da Steam está aberto/i.test(message)) return 'OTHER_GAME_RUNNING';
-  if (/jogos em execução/i.test(message)) return 'PROCESS_CHECK_FAILED';
   if (/conquista desconhecida/i.test(message)) return 'UNKNOWN_ACHIEVEMENT';
   if (/Verifique a conta|verificação/i.test(message)) return 'PROBE_REQUIRED';
   if (/inválido|confirmação|uma conquista/i.test(message)) return 'INVALID_REQUEST';
