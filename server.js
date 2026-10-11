@@ -163,6 +163,11 @@ const server = http.createServer((req, res) => {
   catch { return send(res, 500, { error: 'Falha ao abrir arquivo' }); }
 });
 if (require.main === module) {
+  server.on('error', error => {
+    if (error.code === 'EADDRINUSE') console.error('O Atlas ja esta aberto. Feche a janela anterior e abra este arquivo novamente.');
+    else console.error('Nao foi possivel abrir o Atlas:', error.message);
+    process.exitCode = 1;
+  });
   server.listen(PORT, '127.0.0.1', () => {
     const address = `http://127.0.0.1:${PORT}`;
     console.log(`Interface disponível em ${address}`);
