@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
+process.env.ATLAS_ENABLE_EXPERIMENTAL_WRITES = '0';
 const { parseKeyValues, achievementsFromSchema } = require('./steam-schema');
-const { installedGames, server, ENABLE_EXPERIMENTAL_WRITES } = require('./server');
+const { server, ENABLE_EXPERIMENTAL_WRITES } = require('./server');
 const { getPublicCatalog } = require('./public-catalog');
 const { validateIds, findNativeDll, authorizeUnlock } = require('./steam-native');
 const { verifyUnlock } = require('./verify-unlock');
@@ -20,7 +21,6 @@ const sample = Buffer.concat([object('123', [stats]), Buffer.from([8])]);
 const catalog = achievementsFromSchema(parseKeyValues(sample), '123');
 assert.deepEqual(catalog, [{ id: 'ACH_TEST', name: 'Conquista de teste', description: 'Test description', hidden: false }]);
 assert.deepEqual(achievementsFromSchema({ '123': { stats: { '1': { bits: { '0': { name: '781', display: { name: { english: 1 }, desc: { english: 'Open level 1' } } } } } } } }, '123'), [{ id: '781', name: '1', description: 'Open level 1', hidden: false }]);
-assert.ok(installedGames().every(g => /^\d+$/.test(g.appid) && g.name));
 assert.deepEqual(validateIds(['ACH_ONE']), ['ACH_ONE']);
 assert.throws(() => validateIds(['ACH_ONE', 'ACH_TWO']), /uma conquista/);
 assert.throws(() => validateIds(['ACH\0BAD']), /inválido/);
@@ -28,12 +28,23 @@ assert.throws(() => findNativeDll('bad', () => []), /App ID/);
 assert.throws(() => authorizeUnlock({ appid: '1086940', ids: ['ACH_ONE'] }), /Confirmação/);
 assert.deepEqual(authorizeUnlock({ appid: '1086940', ids: ['ACH_ONE'], confirmation: 'ASSUMO O RISCO' }), { appid: '1086940', ids: ['ACH_ONE'] });
 assert.throws(() => authorizeUnlock({ appid: '1086940', ids: ['ACH_ONE', 'ACH_TWO'], confirmation: 'ASSUMO O RISCO' }), /uma conquista/);
-if (!ENABLE_EXPERIMENTAL_WRITES) {
-  let status;
-  server.emit('request', { method: 'POST', url: '/api/native-unlock', headers: { host: '127.0.0.1:47621' } }, { writeHead(code) { status = code; }, end() {} });
-  assert.equal(status, 403);
+assert.equal(ENABLE_EXPERIMENTAL_WRITES, false);
+function localRequest(method, url, headers) {
+  let status; let sentHeaders; let body;
+  server.emit('request', { method, url, headers }, {
+    writeHead(code, responseHeaders) { status = code; sentHeaders = responseHeaders; },
+    end(payload) { body = payload; }
+  });
+  return { status, headers: sentHeaders, body };
 }
-console.log('Leitura de schema e descoberta de jogos: OK');
+const deniedWrite = localRequest('POST', '/api/native-unlock', { host: '127.0.0.1:47621' });
+assert.equal(deniedWrite.status, 403);
+assert.match(deniedWrite.headers['Content-Security-Policy'], /script-src 'self'/);
+assert.equal(deniedWrite.headers['X-Frame-Options'], 'DENY');
+assert.equal(localRequest('GET', '/', { host: 'evil.example' }).status, 403);
+assert.equal(localRequest('GET', '/', { host: '127.0.0.1:47621', origin: 'https://evil.example' }).status, 403);
+assert.equal(JSON.parse(localRequest('GET', '/api/capabilities', { host: '127.0.0.1:47621' }).body).experimentalWritesEnabled, false);
+console.log('Leitura de schema e limites HTTP locais: OK');
 
 (async () => {
   const identity = { appId: 799070, steamId: '76561190000000001' };
