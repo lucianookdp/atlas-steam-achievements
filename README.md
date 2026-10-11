@@ -7,7 +7,7 @@ Versão experimental para Windows. Permite selecionar e consultar conquistas pel
 1. Use a sessão Steam que já está aberta no computador. O Atlas não tem tela de login e não pede usuário, senha ou código. Para consultar ou alterar conquistas da conta, a Steam precisa estar aberta e autenticada; o jogo precisa estar instalado pela Steam.
 2. Dê dois cliques em `start.cmd`. Nesta versão de desenvolvimento, é necessário ter Node.js 18 ou superior instalado. O inicializador também aceita um `node.exe` portátil colocado em `runtime/` para uma futura distribuição sem instalação.
 3. O navegador deve abrir automaticamente. Acesse `http://127.0.0.1:47621` se não abrir.
-4. Escolha o jogo, clique em **Verificar conta** e selecione conquistas para revisar ou exportar. O botão **Desbloquear na Steam** fica desativado no modo padrão.
+4. Escolha o jogo e marque as conquistas que quer acompanhar. A seleção e os motivos ficam salvos neste navegador. **Verificar conta** é opcional para consultar o progresso real e identificar as faltantes; o botão **Desbloquear na Steam** fica desativado no modo padrão.
 
 O servidor escuta apenas em `127.0.0.1` e não instala pacotes. **Consultar Steam** usa a API pública, envia apenas o App ID, não usa senha ou chave de API, aplica intervalo mínimo de 3 segundos entre consultas e guarda o resultado em memória por 24 horas. **Verificar conta** e **Desbloquear na Steam** usam a sessão já aberta no aplicativo Steam. O Atlas não inicia a Steam automaticamente. Feche a janela do terminal para encerrar.
 
@@ -17,12 +17,13 @@ O servidor escuta apenas em `127.0.0.1` e não instala pacotes. **Consultar Stea
 - Lê automaticamente nomes, descrições e conquistas ocultas do cache local `UserGameStatsSchema_<AppID>.bin`, quando disponível.
 - Permite adicionar um jogo por App ID e importar um catálogo JSON.
 - Permite consultar, sob demanda, a API pública da Steam. A resposta contém IDs e percentuais globais, que podem não incluir nomes e descrições legíveis.
-- Permite buscar, filtrar, selecionar, limpar e exportar a seleção para JSON.
+- Permite buscar, filtrar por faltantes confirmadas ou marcadas, selecionar, limpar e exportar a seleção para JSON. Cada conquista marcada pode receber um motivo opcional: servidor fechado, bug no jogo, save perdido ou outro.
+- Mostra o progresso do jogo após uma leitura da conta. Antes dessa leitura, não presume que conquistas do catálogo estejam faltando. O jogo de demonstração usa estados fictícios para experimentar os filtros sem acessar a Steam.
 - Interface compacta e adaptável, organizada em Biblioteca, Conquistas e Seleção, com tema grafite e azul discreto, ícone de troféu próprio e rodapé com link para o GitHub do autor. Em janelas estreitas, os painéis se empilham sem rolagem horizontal.
 - Verifica o estado real das conquistas pela API local Steamworks do jogo instalado. Confere o App ID devolvido pela Steam e identifica a conta ativa antes de ler ou enviar. Conquistas já desbloqueadas são identificadas e ignoradas no envio.
 - O conector experimental envia **uma conquista por confirmação** por `SetAchievement` e `StoreStats`, após ativação local e confirmação explícita na interface. Exige uma verificação da mesma conta nos cinco minutos anteriores; ela é consumida pelo envio. A seleção e a exportação podem conter várias conquistas. Não altera estatísticas do jogo nem remove conquistas.
 - Após um envio aceito, lê novamente o estado da mesma conta e do mesmo jogo. Mostra **confirmada** se a conquista aparecer desbloqueada, **ainda pendente** se continuar bloqueada após uma segunda consulta, ou **resultado não confirmado** se a releitura falhar. Antes de outro envio, exige nova verificação da conta.
-- Guarda catálogos importados e seleções no armazenamento local do navegador.
+- Guarda catálogos importados, seleções, motivos e o último jogo aberto no armazenamento local do navegador para continuar depois.
 - Inclui um jogo de demonstração para experimentar a interface.
 - Oferece atalhos para Mad Max, Baldur's Gate 3, Divinity: Original Sin 2 e Cyberpunk 2077 como exemplos de uso. Os atalhos não indicam que esses jogos foram avaliados como seguros.
 
