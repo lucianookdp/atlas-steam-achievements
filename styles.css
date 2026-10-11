@@ -28,8 +28,9 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .brand small { color: var(--muted); font-size: 10px; margin-top: 2px; }
 .header-actions { display: flex; align-items: center; gap: 9px; }
 .mode-badge { white-space: nowrap; color: #bdd3df; background: #1b2a36; border: 1px solid #3b5465; padding: 7px 10px; border-radius: 100px; font-size: 10px; font-weight: 700; }
-.header-selection, .icon-btn { min-height: 31px; color: #d0dce5; background: #202b35; border: 1px solid #3c4c59; border-radius: 7px; font-size: 11px; font-weight: 700; }
+.header-selection, .icon-btn, .language-btn { min-height: 31px; color: #d0dce5; background: #202b35; border: 1px solid #3c4c59; border-radius: 7px; font-size: 11px; font-weight: 700; }
 .header-selection { padding: 4px 9px; white-space: nowrap; }
+.language-btn { min-width: 36px; padding: 4px 7px; }
 .header-selection b { display: inline-block; margin-left: 4px; padding: 2px 5px; border-radius: 5px; color: #082031; background: var(--blue-light); }
 .icon-btn { width: 31px; border-radius: 50%; }
 main { max-width: 1520px; margin: 0 auto; padding: 20px; }

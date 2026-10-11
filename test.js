@@ -1,5 +1,7 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 process.env.ATLAS_ENABLE_EXPERIMENTAL_WRITES = '0';
+const { COPY } = require('./app');
 const { parseKeyValues, achievementsFromSchema } = require('./steam-schema');
 const { server, ENABLE_EXPERIMENTAL_WRITES } = require('./server');
 const { getPublicCatalog } = require('./public-catalog');
@@ -44,6 +46,9 @@ assert.equal(deniedWrite.headers['X-Frame-Options'], 'DENY');
 assert.equal(localRequest('GET', '/', { host: 'evil.example' }).status, 403);
 assert.equal(localRequest('GET', '/', { host: '127.0.0.1:47621', origin: 'https://evil.example' }).status, 403);
 assert.equal(JSON.parse(localRequest('GET', '/api/capabilities', { host: '127.0.0.1:47621' }).body).experimentalWritesEnabled, false);
+assert.deepEqual(Object.keys(COPY.pt).sort(), Object.keys(COPY.en).sort());
+const html = fs.readFileSync(require('node:path').join(__dirname, 'index.html'), 'utf8');
+for (const [, key] of html.matchAll(/data-i18n(?:-placeholder|-aria)?="([^"]+)"/g)) assert.ok(COPY.pt[key], `Missing translation: ${key}`);
 console.log('Leitura de schema e limites HTTP locais: OK');
 
 (async () => {
