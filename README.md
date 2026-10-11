@@ -27,6 +27,8 @@ Antes de cada envio, o Atlas verifica se outro jogo da Steam está em execução
 
 **Risco:** desbloquear conquistas pode contrariar regras da Steam ou do jogo e resultar em punições, inclusive na conta. Não recomendamos uso em jogos competitivos online. Não há garantia de sucesso, compatibilidade ou ausência de banimento. Leia [riscos e relatos](RISCOS-E-RELATOS.md).
 
+O projeto usa o [SAM como referência técnica](SAM-REFERENCIA.md), sem alegar proteção contra banimentos.
+
 Execute `npm test` para rodar testes locais com dados simulados, sem consultar sua conta nem enviar conquistas. O Atlas não altera a data histórica das conquistas.
 
 ## English
@@ -53,5 +55,7 @@ Before each send, Atlas checks whether another Steam game is running on Windows 
 **Local logs:** probe and send attempts are saved in `logs/atlas-events.jsonl` (up to 1 MB per file, with two older copies). Each line contains time, App ID, stage, duration, and result; achievements use a hash. Steam ID, passwords, names, and raw connector responses are not logged. The interface does not serve this file. Review it before sharing.
 
 **Risk:** unlocking achievements may violate Steam or game rules and lead to penalties, including on your account. We do not recommend competitive online games. There is no guarantee of success, compatibility, or freedom from bans. See [risks and reports](RISCOS-E-RELATOS.md) (Portuguese).
+
+The project uses [SAM as a technical reference](SAM-REFERENCIA.md), without claiming ban protection.
 
 Run `npm test` for local tests with simulated data; they do not check your account or send achievements. Atlas does not change historical unlock dates.
