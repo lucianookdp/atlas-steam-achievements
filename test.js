@@ -50,6 +50,8 @@ assert.equal(localRequest('GET', '/', { host: 'evil.example' }).status, 403);
 assert.equal(localRequest('GET', '/', { host: '127.0.0.1:47621', origin: 'https://evil.example' }).status, 403);
 assert.equal(JSON.parse(localRequest('GET', '/api/capabilities', { host: '127.0.0.1:47621' }).body).experimentalWritesEnabled, false);
 assert.deepEqual(Object.keys(COPY.pt).sort(), Object.keys(COPY.en).sort());
+assert.equal(chooseIntervalMs(parseIntervalConfig({ mode: '0' })), 0);
+assert.equal(chooseIntervalMs(parseIntervalConfig({ mode: '5' })), 5_000);
 assert.equal(chooseIntervalMs(parseIntervalConfig({ mode: '60' })), 60_000);
 assert.equal(chooseIntervalMs(parseIntervalConfig({ mode: 'custom', customSeconds: '90' })), 90_000);
 const randomInterval = parseIntervalConfig({ mode: 'random', minSeconds: '45', maxSeconds: '75' });
