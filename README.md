@@ -14,6 +14,8 @@ Close the console to stop Atlas. The default interval is one minute; other prese
 
 **Risk:** Steam or game rules may prohibit this use and penalties are possible. Avoid competitive online games. No interval or tool guarantees protection from bans.
 
+**License:** [zlib License](LICENSE.txt).
+
 ## Português
 
 1. Baixe e extraia o [ZIP do repositório](https://github.com/lucianookdp/atlas-steam-achievements/archive/refs/heads/main.zip). Mantenha os arquivos juntos. Instale o [Node.js 18+](https://nodejs.org/) se necessário e abra a Steam.
@@ -23,3 +25,5 @@ Close the console to stop Atlas. The default interval is one minute; other prese
 Feche o terminal para encerrar. O intervalo padrão é um minuto; há tempos prontos, personalizado e aleatório. O Atlas não altera datas históricas. Os logs locais ficam em `logs/atlas-events.jsonl`; revise antes de compartilhar. `npm test` usa dados simulados e não acessa sua conta Steam.
 
 **Risco:** regras da Steam ou do jogo podem proibir esse uso e resultar em punições. Evite jogos competitivos online. Nenhum intervalo ou ferramenta garante proteção contra banimentos.
+
+**Licença:** [zlib License](LICENSE.txt).
